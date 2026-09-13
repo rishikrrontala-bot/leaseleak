@@ -69,7 +69,8 @@ export default function Landing() {
 
       {/* ============ 1 · HERO — the headline is the hero ============ */}
       <section className="relative z-10 mx-auto grid min-h-[86svh] w-full max-w-7xl grid-cols-1 items-end gap-8 px-5 pb-14 pt-8 sm:px-8 md:grid-cols-12">
-        <div className="md:col-span-8" data-reveal>
+        {/* The hero reveals on mount (is-in from the start), not on intersection. */}
+        <div className="md:col-span-8 is-in" data-reveal>
           <h1 className="t-display text-paper">
             <span className="wipe-line">Your rent roll</span><br />
             <span className="wipe-line">is leaking</span>
