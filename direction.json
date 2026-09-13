@@ -1,0 +1,78 @@
+{
+  "brief": "LeaseLeak — drop your rent roll spreadsheet and see in five seconds how much rent you're leaving on the table, which leases expire in the wrong month, and get the renewal letters written. Built for small landlords and mom-and-pop multifamily owners with 4 to 50 units who track leases in a spreadsheet. Uses public HUD Fair Market Rent and Zillow ZORI data. Fintech-grade seriousness, real dollar figures, no hype.",
+  "seed": 1748869841,
+  "sections": 6,
+  "theme": {
+    "name": "Bold Studio Solid",
+    "notes": "One saturated field owns the page — oxblood, royal, forest, vermilion, emerald — with crisp contrasting UI on top."
+  },
+  "surface": "Full-bleed cinematic photography with disciplined tonal overlay",
+  "type": {
+    "display": "Clean geometric grotesk (Satoshi / General Sans register)",
+    "body": "the same family at lighter weight"
+  },
+  "hero": "Inline typography behemoth — the headline IS the hero, image inset into a counter",
+  "heroScale": "Mid — balanced type and image, cinematic but not screen-filling",
+  "spine": "Precision instrument — machined detail, calibration, tactile control",
+  "secondRead": "one unexpected material switch — paper against gloss, or a metal accent",
+  "components": [
+    "Split testimonial quote wall",
+    "Infinite brand marquee strip",
+    "Oversized metrics strip",
+    "Product UI panel stack"
+  ],
+  "motion": [
+    "mask wipe — content revealed by a travelling clip-path",
+    "horizontal transit — vertical scroll drives lateral movement"
+  ],
+  "threeD": {
+    "name": "Hero object",
+    "notes": "One real 3D object in the fold, slowly rotating or cursor-reactive. Everything below is flat."
+  },
+  "ctaPrimary": "Underlined inline link with a trailing arrow",
+  "ctaSecondary": "Ghost outline",
+  "plan": [
+    {
+      "index": 1,
+      "role": "Hero",
+      "shot": "the single strongest image on the page — the one thing a visitor should remember",
+      "anchor": "Bottom-left text over background image",
+      "background": "Texture or paper as the whole surface"
+    },
+    {
+      "index": 2,
+      "role": "Capability",
+      "shot": "a detail crop, close and specific",
+      "anchor": "Image-as-canvas with text in a clean safe area",
+      "background": "Soft radial vignette over a product crop"
+    },
+    {
+      "index": 3,
+      "role": "Method",
+      "shot": "process or making — hands, tools, materials, motion",
+      "anchor": "Top-left lead, support bottom-right",
+      "background": "Solid surface with one inline asset"
+    },
+    {
+      "index": 4,
+      "role": "Proof",
+      "shot": "evidence in the real world — people, place, or the thing in use",
+      "anchor": "Bottom-left text over background image",
+      "background": "Atmospheric photo with a single-tone color grade"
+    },
+    {
+      "index": 5,
+      "role": "Showcase",
+      "shot": "the portfolio grid — several images that share a grade",
+      "anchor": "Right-third caption + left-two-thirds visual",
+      "background": "Solid surface with one inline asset"
+    },
+    {
+      "index": 6,
+      "role": "Close",
+      "shot": "the widest frame — space around the final ask",
+      "anchor": "Top-left lead, support bottom-right",
+      "background": "Editorial side-image at 60/40"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+/* ---------- Fonts: Satoshi (Fontshare / ITF free licence), self-hosted ---------- */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./fonts/Satoshi-Variable.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./fonts/Satoshi-VariableItalic.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------- Tokens ---------- */
+@theme {
+  --font-sans: 'Satoshi', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* One saturated field: forest. Everything else is derived. */
+  --color-field: #0f2e22;
+  --color-field-2: #143a2b;
+  --color-field-3: #1b4a37;
+  --color-field-4: #245f47;
+  --color-mint: #9fe1bd;
+  --color-mint-2: #6fcf9a;
+  --color-paper: #f4efe3;
+  --color-paper-2: #e9e1cf;
+  --color-paper-3: #d8cdb3;
+  --color-ink: #10201a;
+  --color-ink-2: #3a4a42;
+  --color-ember: #ff6b3d;
+  --color-ember-2: #ff8a66;
+  --color-ember-3: #ffb8a3;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --text-display: clamp(3.5rem, 9vw, 9rem);
+  --text-display-sm: clamp(2.5rem, 6vw, 5.5rem);
+  --text-h2: clamp(2rem, 4vw, 3.5rem);
+  --text-h3: clamp(1.375rem, 2vw, 1.75rem);
+}
+
+/* ---------- Base ---------- */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  @apply bg-field text-paper font-sans antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+  overflow-x: clip;
+}
+::selection { background: var(--color-ember); color: var(--color-ink); }
+:focus-visible { outline: 2px solid var(--color-ember); outline-offset: 3px; border-radius: 2px; }
+button, [role="button"] { cursor: pointer; }
+input, select, textarea { caret-color: var(--color-ember); }
+* { scrollbar-width: thin; scrollbar-color: var(--color-field-4) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-field-4); border-radius: 999px; border: 2px solid var(--color-field); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Type scale */
+.t-display { font-size: var(--text-display); line-height: 0.92; letter-spacing: -0.035em; font-weight: 700; }
+.t-display-sm { font-size: var(--text-display-sm); line-height: 0.95; letter-spacing: -0.03em; font-weight: 700; }
+.t-h2 { font-size: var(--text-h2); line-height: 1.02; letter-spacing: -0.025em; font-weight: 600; }
+.t-h3 { font-size: var(--text-h3); line-height: 1.15; letter-spacing: -0.015em; font-weight: 600; }
+.t-body { font-size: 1.0625rem; line-height: 1.55; font-weight: 400; }
+.t-lead { font-size: clamp(1.125rem, 1.6vw, 1.375rem); line-height: 1.4; font-weight: 400; }
+.t-small { font-size: 0.875rem; line-height: 1.45; }
+.t-micro { font-size: 0.75rem; line-height: 1.4; letter-spacing: 0.02em; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+.measure { max-width: 68ch; }
+
+/* Graded photo: one tonal overlay so four photographers read as one shoot */
+.photo { position: relative; overflow: hidden; background: var(--color-field-2); }
+.photo > img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.72) contrast(1.05) brightness(0.92); }
+.photo::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgb(15 46 34 / 0.15), rgb(15 46 34 / 0.55));
+  mix-blend-mode: multiply;
+}
+.photo.photo--tint::after { background: rgb(20 58 43 / 0.55); mix-blend-mode: color; }
+
+/* Paper: the second-read material switch */
+.paper {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.5) inset, 0 24px 60px -30px rgb(0 0 0 / 0.6);
+}
+
+/* Links & CTAs */
+.link-arrow {
+  @apply inline-flex items-center gap-2 font-medium;
+  text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1.5px; text-decoration-color: var(--color-ember);
+  transition: text-underline-offset 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.link-arrow svg { transition: transform 160ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .link-arrow:hover { text-underline-offset: 9px; color: var(--color-ember-3); }
+  .link-arrow:hover svg { transform: translateX(3px); }
+}
+.btn-ghost {
+  @apply inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-[0.95rem] font-medium;
+  border-color: rgb(244 239 227 / 0.35); color: var(--color-paper);
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.btn-solid {
+  @apply inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.95rem] font-semibold;
+  background: var(--color-ember); color: var(--color-ink);
+  transition: background-color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover { border-color: var(--color-paper); background: rgb(244 239 227 / 0.06); }
+  .btn-solid:hover { background: var(--color-ember-2); }
+}
+.btn-ghost:active, .btn-solid:active { transform: scale(0.98); }
+.btn-ghost:disabled, .btn-solid:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Mask wipe: motion behaviour #1.
+   The observed element carries [data-reveal]; the clip lives on a child so
+   IntersectionObserver (which honours clip-path) still sees the target. */
+[data-reveal] .wipe { clip-path: inset(0 100% 0 0); }
+[data-reveal].is-in .wipe { animation: wipe-in 900ms var(--ease-out) forwards; }
+[data-reveal] .wipe-up { clip-path: inset(100% 0 0 0); }
+[data-reveal].is-in .wipe-up { animation: wipe-up-in 800ms var(--ease-out) forwards; }
+[data-reveal] .wipe-down { clip-path: inset(0 0 100% 0); }
+[data-reveal].is-in .wipe-down { animation: wipe-up-in 800ms var(--ease-out) forwards; }
+@keyframes wipe-in { to { clip-path: inset(0 0 0 0); } }
+@keyframes wipe-up-in { to { clip-path: inset(0 0 0 0); } }
+[data-reveal] .wipe-line { display: inline-block; clip-path: inset(0 0 100% 0); transform: translateY(0.35em); }
+[data-reveal].is-in .wipe-line { animation: line-in 700ms var(--ease-out) forwards; }
+[data-reveal].is-in .wipe-line:nth-child(2) { animation-delay: 60ms; }
+[data-reveal].is-in .wipe-line:nth-child(3) { animation-delay: 120ms; }
+[data-reveal].is-in .wipe-line:nth-child(4) { animation-delay: 180ms; }
+@keyframes line-in { to { clip-path: inset(-0.1em 0 -0.25em 0); transform: translateY(0); } }
+
+/* Marquee (constant motion = linear) */
+.marquee { display: flex; gap: 3rem; width: max-content; animation: marquee 40s linear infinite; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wipe, .wipe-up, .wipe-down, .wipe-line { clip-path: none !important; transform: none !important; animation: none !important; }
+  .marquee { animation: none; }
+  .transit { transform: none !important; }
+}
+
+/* Dropzone */
+.dropzone { border: 1.5px dashed rgb(244 239 227 / 0.35); transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.dropzone.is-over { border-color: var(--color-ember); background: rgb(255 107 61 / 0.08); }
+
+/* Print: letters only */
+@media print {
+  body { background: white; color: black; }
+  .no-print { display: none !important; }
+  .paper { box-shadow: none; page-break-after: always; }
+}
