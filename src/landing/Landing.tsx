@@ -73,13 +73,12 @@ export default function Landing() {
         <div className="md:col-span-8 is-in" data-reveal>
           <h1 className="t-display text-paper">
             <span className="wipe-line">Your rent roll</span><br />
-            <span className="wipe-line">is leaking</span>
-            <span className="wipe-line ml-[0.18em] align-baseline">
-              <span className="photo inline-block h-[0.72em] w-[1.6em] translate-y-[0.08em] rounded-[0.12em] align-baseline">
+            <span className="wipe-line">is leaking</span><br />
+            <span className="wipe-line whitespace-nowrap">money.
+              <span className="photo ml-[0.18em] inline-block h-[0.72em] w-[1.6em] translate-y-[0.06em] rounded-[0.12em] align-baseline">
                 <img src={asset("/photos/brownstones.jpg")} alt="A row of three-storey brick and brownstone apartment buildings on a city street" width={2000} height={1483} loading="eager" fetchPriority="high" />
               </span>
-            </span><br />
-            <span className="wipe-line">money.</span>
+            </span>
           </h1>
           <p className="t-lead measure mt-8 text-paper/80">
             Drop your rent roll. Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, and the renewal letters — written.

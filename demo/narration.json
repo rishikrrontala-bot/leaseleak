@@ -1,0 +1,50 @@
+[
+ {
+  "id": "01",
+  "text": "This is a sixteen-unit rent roll. Drop it in, and five seconds later you know it is leaking twenty-nine thousand dollars a year.",
+  "caption": "Drop a rent roll in. Five seconds later: $29,280 a year, left on the table.",
+  "duration": 6.708753
+ },
+ {
+  "id": "02",
+  "text": "Most of America's small rental buildings are owned by individuals who price by gut, in a spreadsheet. LeaseLeak checks every unit against HUD's published Fair Market Rent for that exact ZIP code and bedroom count.",
+  "caption": "Every unit is checked against HUD's Fair Market Rent for its ZIP and bedroom count.",
+  "duration": 11.439955
+ },
+ {
+  "id": "03",
+  "text": "Ember is the gap. Unit A one in Austin rents for seventeen fifty against a two thousand fifty benchmark. That's thirty-six hundred dollars a year on one door.",
+  "caption": "Ember is the gap. Unit A1: $1,750 vs a $2,050 benchmark \u2014 $3,600 a year.",
+  "duration": 8.924717
+ },
+ {
+  "id": "04",
+  "text": "Timing matters too. Every ZIP gets its own seasonal curve from Zillow's rent index. A lease that ends in November re-signs at the bottom of the market.",
+  "caption": "Each ZIP gets a seasonal curve from Zillow's rent index. November leases re-sign at the trough.",
+  "duration": 8.080454
+ },
+ {
+  "id": "05",
+  "text": "Three leases end in the next sixty days, and each one already has a renewal rent, capped at six percent so you keep good tenants.",
+  "caption": "Three leases end within 60 days \u2014 each with a renewal rent, capped at 6%.",
+  "duration": 7.234422
+ },
+ {
+  "id": "06",
+  "text": "And the letters are written. New rent, never above the benchmark, and a term that ends in July, when Austin rents peak. Ten letters, one PDF, one click.",
+  "caption": "Renewal letters, written: new rent, a term ending at the seasonal peak. Ten letters, one PDF.",
+  "duration": 9.597868
+ },
+ {
+  "id": "07",
+  "text": "There is no black box underneath. HUD's Small Area Fair Market Rents for thirty-eight thousand ZIP codes, Zillow's index for eight and a half thousand, and three lines of arithmetic. Nothing leaves your browser.",
+  "caption": "38,601 ZIPs of HUD data, 8,543 of Zillow, three lines of arithmetic. Nothing leaves your browser.",
+  "duration": 11.318186
+ },
+ {
+  "id": "08",
+  "text": "One honest limit: Fair Market Rent is the fortieth percentile, so this number is a floor, not an appraisal. Drop your own CSV or Excel file, any column names, and find out what yours says.",
+  "caption": "Fair Market Rent is the 40th percentile \u2014 the number is a floor. Drop your own file and find out.",
+  "duration": 12.366712
+ }
+]
