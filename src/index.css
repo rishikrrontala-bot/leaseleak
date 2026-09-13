@@ -129,6 +129,8 @@ input, select, textarea { caret-color: var(--color-ember); }
 [data-reveal].is-in .wipe-up { animation: wipe-up-in 800ms var(--ease-out) forwards; }
 [data-reveal] .wipe-down { clip-path: inset(0 0 100% 0); }
 [data-reveal].is-in .wipe-down { animation: wipe-up-in 800ms var(--ease-out) forwards; }
+/* Mount-time variant for the one number that must appear the instant results render */
+.wipe-up-now { clip-path: inset(100% 0 0 0); animation: wipe-up-in 800ms var(--ease-out) forwards; }
 @keyframes wipe-in { to { clip-path: inset(0 0 0 0); } }
 @keyframes wipe-up-in { to { clip-path: inset(0 0 0 0); } }
 [data-reveal] .wipe-line { display: inline-block; clip-path: inset(0 0 100% 0); transform: translateY(0.35em); }
@@ -143,7 +145,7 @@ input, select, textarea { caret-color: var(--color-ember); }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .wipe, .wipe-up, .wipe-down, .wipe-line { clip-path: none !important; transform: none !important; animation: none !important; }
+  .wipe, .wipe-up, .wipe-up-now, .wipe-down, .wipe-line { clip-path: none !important; transform: none !important; animation: none !important; }
   .marquee { animation: none; }
   .transit { transform: none !important; }
 }

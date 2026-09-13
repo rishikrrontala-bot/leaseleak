@@ -71,8 +71,8 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
       <section aria-labelledby="headline" className="grid gap-8 md:grid-cols-12 md:gap-6">
         <div className="md:col-span-7">
           <p id="headline" className="t-micro uppercase tracking-[0.14em] text-ember-3">Rent left on the table, per year</p>
-          <div className="mt-3" data-reveal>
-            <p className="wipe-up t-display num text-paper">{money(a.totalGapAnnual)}</p>
+          <div className="mt-3">
+            <p key={a.totalGapAnnual} className="wipe-up-now t-display num text-paper">{money(a.totalGapAnnual)}</p>
           </div>
           <p className="t-lead measure mt-5 text-paper/80">
             {a.unitsUnder} of {a.units.length} units rent below HUD's FY{a.fy} Fair Market Rent for their ZIP and bedroom count.
