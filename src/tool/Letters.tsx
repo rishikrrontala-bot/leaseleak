@@ -40,7 +40,7 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
       <div className="grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <h3 id="letters" className="t-h2">Renewal letters, written</h3>
-          <p className="t-body measure mt-2 text-paper/70">
+          <p className="t-body measure mt-2 text-ink/70">
             One letter per unit: the new rent (capped, never above the HUD benchmark), a term that ends in the seasonal peak, and the notice language. Edit anything before you send.
           </p>
 
@@ -49,13 +49,13 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
               <span className="t-small font-medium">Sign as</span>
               <input
                 type="text" value={landlord} onChange={(e) => setLandlord(e.target.value)} placeholder="Your name or company"
-                className="mt-1 w-full rounded-xl border border-paper/20 bg-field-2 px-4 py-2.5 text-paper placeholder:text-paper/40 focus:border-ember focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-ink/20 bg-canvas-2 px-4 py-2.5 text-ink placeholder:text-ink/40 focus:border-ember focus:outline-none"
               />
             </label>
             <div className="flex flex-wrap gap-6">
               <label className="block">
                 <span className="t-small font-medium">Notice period</span>
-                <select value={noticeDays} onChange={(e) => setNoticeDays(parseInt(e.target.value, 10))} className="mt-1 block rounded-xl border border-paper/20 bg-field-2 px-4 py-2.5 text-paper focus:border-ember focus:outline-none">
+                <select value={noticeDays} onChange={(e) => setNoticeDays(parseInt(e.target.value, 10))} className="mt-1 block rounded-xl border border-ink/20 bg-canvas-2 px-4 py-2.5 text-ink focus:border-ember focus:outline-none">
                   {[30, 45, 60, 90].map((d) => <option key={d} value={d}>{d} days</option>)}
                 </select>
               </label>
@@ -67,15 +67,15 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
           </div>
 
           <div className="mt-6">
-            <p className="t-micro mb-2 uppercase tracking-[0.14em] text-paper/60">Units ({selected.size} selected)</p>
-            <ul className="max-h-72 divide-y divide-paper/10 overflow-y-auto rounded-2xl bg-field-2">
+            <p className="t-micro mb-2 uppercase tracking-[0.14em] text-ink/60">Units ({selected.size} selected)</p>
+            <ul className="max-h-72 divide-y divide-ink/10 overflow-y-auto rounded-2xl bg-canvas-2">
               {a.units.filter((u) => u.leaseEnd).map((u) => (
                 <li key={u.rowIndex}>
-                  <label className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 ${preview === u.rowIndex ? 'bg-field-3' : ''}`}>
+                  <label className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 ${preview === u.rowIndex ? 'bg-canvas-3' : ''}`}>
                     <input type="checkbox" checked={selected.has(u.rowIndex)} onChange={() => toggle(u.rowIndex)} className="h-4 w-4 accent-ember" />
                     <button type="button" className="flex flex-1 items-center justify-between text-left" onClick={() => setPreview(u.rowIndex)}>
-                      <span className="t-small"><span className="font-semibold">Unit {u.id}</span> <span className="text-paper/60">· {u.tenant ?? 'Resident'}</span></span>
-                      <span className="t-small num flex items-center gap-2 text-paper/70">
+                      <span className="t-small"><span className="font-semibold">Unit {u.id}</span> <span className="text-ink/60">· {u.tenant ?? 'Resident'}</span></span>
+                      <span className="t-small num flex items-center gap-2 text-ink/70">
                         {u.proposedBurden !== null && u.proposedBurden > BURDEN_LINE && (
                           <span className="inline-block h-2 w-2 rounded-full bg-ember" title={`Proposed rent is ${fmtPct(u.proposedBurden, 0)} of the ZIP's median household income`} aria-label="Above the 30% affordability line" />
                         )}
@@ -95,23 +95,23 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
             >
               {busy ? 'Building PDF…' : `Download ${letters.length} letter${letters.length === 1 ? '' : 's'} (PDF)`}
             </button>
-            <span className="t-small num text-paper/70">{fmtUSD(Math.round(totalIncrease))}/yr in proposed increases</span>
+            <span className="t-small num text-ink/70">{fmtUSD(Math.round(totalIncrease))}/yr in proposed increases</span>
           </div>
 
           {withIncome > 0 && (
-            <div className="mt-6 rounded-2xl bg-field-2 px-5 py-4">
-              <p className="t-micro uppercase tracking-[0.14em] text-paper/60">Fairness check</p>
+            <div className="mt-6 rounded-2xl bg-canvas-2 px-5 py-4">
+              <p className="t-micro uppercase tracking-[0.14em] text-ink/60">Fairness check</p>
               {burdened.length === 0 ? (
-                <p className="t-small mt-2 text-paper/75">
+                <p className="t-small mt-2 text-ink/75">
                   Every proposed rent is under 30% of its ZIP's median household income — the usual affordability line. These are increases a tenant can absorb.
                 </p>
               ) : (
                 <>
-                  <p className="t-small mt-2 text-paper/75">
+                  <p className="t-small mt-2 text-ink/75">
                     <span className="font-semibold text-ember-3">{burdened.length} of {withIncome}</span> proposed rents would be above 30% of the ZIP's median household income.
                     Those tenants are the likeliest to move — consider a smaller increase or a longer term for them.
                   </p>
-                  <ul className="t-small mt-2 flex flex-wrap gap-x-4 gap-y-1 text-paper/60">
+                  <ul className="t-small mt-2 flex flex-wrap gap-x-4 gap-y-1 text-ink/60">
                     {burdened.map((l) => <li key={l.unit.rowIndex} className="num">Unit {l.unit.id} · {fmtPct((l.newRent * 12) / l.unit.medianIncome!, 0)}</li>)}
                   </ul>
                 </>

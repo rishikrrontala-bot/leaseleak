@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { writeFileSync } from 'node:fs';
 
-const FIELD = '#0f2e22', PAPER = '#f4efe3', EMBER = '#ff6b3d';
+const FIELD = '#1a1a1a', PAPER = '#ede4e0', EMBER = '#ff6b3d';
 
 // The mark from src/tool/Tool.tsx: rounded square, "L", ember dot.
 const mark = (bg, fg) => `

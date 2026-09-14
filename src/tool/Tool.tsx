@@ -5,7 +5,8 @@ import { parseCsvText, parseFile } from '../lib/parse';
 import { analyze, loadIncome, loadSafmr, loadZori, preloadData } from '../lib/analyze';
 import { SAMPLE_CSV } from '../lib/sample';
 import type { ParsedRoll } from '../lib/types';
-import { Link } from '../lib/router';
+import Nav from '../ui/Nav';
+export { Logo } from '../ui/Logo';
 
 export default function Tool() {
   const [roll, setRoll] = useState<ParsedRoll | null>(null);
@@ -29,6 +30,7 @@ export default function Tool() {
     setRoll(parsed);
     setFileName(name);
     setError(null);
+    window.scrollTo({ top: 0 });
   }, []);
 
   const onFile = useCallback(async (file: File) => {
@@ -52,34 +54,26 @@ export default function Tool() {
   const onUtilities = useCallback((property: string, paid: boolean) => setUtilities((u) => ({ ...u, [property]: paid })), []);
 
   return (
-    <main className="min-h-screen px-5 pb-24 pt-6 sm:px-8">
-      <header className="mx-auto mb-12 flex w-full max-w-6xl items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <Logo /> LeaseLeak
-        </Link>
-        <nav className="flex items-center gap-5 t-small">
-          <Link to="/pricing" className="text-paper/70 hover:text-paper">Pricing</Link>
-          <a href="https://github.com/rishikrrontala-bot/leaseleak" className="text-paper/70 hover:text-paper" target="_blank" rel="noreferrer">Source</a>
-        </nav>
-      </header>
+    <main className="min-h-screen px-5 pb-24 pt-28 sm:px-8 sm:pt-32">
+      <Nav current="app" />
 
       {!analysis ? (
         <section className="mx-auto max-w-3xl">
-          <h1 className="t-display-sm text-center">Drop your rent roll.</h1>
-          <p className="t-lead mx-auto mt-4 max-w-xl text-center text-paper/75">
+          <h1 className="t-display-sm text-center">Drop your <span className="serif font-normal">rent roll.</span></h1>
+          <p className="t-lead mx-auto mt-4 max-w-xl text-center text-ink/75">
             Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, and the renewal letters — written.
           </p>
           <div className="mt-10">
             <Dropzone onFile={onFile} onSample={onSample} busy={busy} error={error} />
           </div>
           {roll && roll.issues.length > 0 && (
-            <p className="t-small mt-4 text-center text-paper/60">{roll.issues.length} rows skipped.</p>
+            <p className="t-small mt-4 text-center text-ink/60">{roll.issues.length} rows skipped.</p>
           )}
         </section>
       ) : (
         <>
           {roll && roll.issues.length > 0 && (
-            <p className="mx-auto mb-6 w-full max-w-6xl rounded-xl bg-field-2 px-4 py-3 t-small text-paper/70">
+            <p className="mx-auto mb-6 w-full max-w-6xl rounded-xl bg-canvas-2 px-4 py-3 t-small text-ink/70">
               {roll.issues.length} row{roll.issues.length === 1 ? '' : 's'} skipped: {roll.issues.slice(0, 4).map((i) => `row ${i.row} (${i.message.toLowerCase()})`).join(', ')}{roll.issues.length > 4 ? '…' : ''}
             </p>
           )}
@@ -96,12 +90,3 @@ async function loadBoth() {
   return { safmr, zori, income };
 }
 
-export function Logo({ className = 'h-6 w-6' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <rect width="64" height="64" rx="14" fill="var(--color-paper)" />
-      <path d="M18 14h8v28h20v8H18z" fill="var(--color-field)" />
-      <circle cx="46" cy="20" r="6" fill="var(--color-ember)" />
-    </svg>
-  );
-}

@@ -37,6 +37,7 @@ npm run dev
 - U.S. Census Bureau, *ACS 5-year 2019–2023, table B19013 (median household income by ZCTA)* — public domain. Built from the table-based summary file, no API key needed. https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/
 - Photographs: CC BY-SA 4.0 / CC0 via Wikimedia Commons — see `public/photos/ATTRIBUTION.md`.
 - Satoshi typeface — Indian Type Foundry, via Fontshare (free licence).
-- Stack: React 19, Vite, Tailwind v4, PapaParse, SheetJS, jsPDF, three.js / React Three Fiber.
+- Instrument Serif — Rodrigo Fuenzalida & Jordan Egstad, via Google Fonts (SIL OFL).
+- Stack: React 19, Vite, Tailwind v4, PapaParse, SheetJS, jsPDF.
 
 Not legal or financial advice. Check your state's notice and rent-increase rules before sending letters.

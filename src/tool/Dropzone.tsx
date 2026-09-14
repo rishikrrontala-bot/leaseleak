@@ -49,7 +49,7 @@ export default function Dropzone({ onFile, onSample, busy, error }: Props) {
           <path d="M8 30v6a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-6" strokeLinecap="round" />
         </svg>
         <p className="t-h3 mb-2">{busy ? 'Reading your rent roll…' : 'Drop your rent roll here'}</p>
-        <p className="t-body mx-auto max-w-md text-paper/70">
+        <p className="t-body mx-auto max-w-md text-ink/70">
           CSV or Excel. Any column names — we look for unit, ZIP, bedrooms, rent and lease end. Nothing leaves your browser.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -64,7 +64,7 @@ export default function Dropzone({ onFile, onSample, busy, error }: Props) {
           </button>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 t-small text-paper/60">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 t-small text-ink/60">
         <span>Columns we understand: Property · Unit · Tenant · Beds · Rent · Lease Start · Lease End · ZIP</span>
         <span className="flex gap-4">
           <button type="button" className="link-arrow" onClick={() => download('leaseleak-template.csv', TEMPLATE_CSV)}>Template CSV</button>
