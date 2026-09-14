@@ -207,8 +207,8 @@ export default function Landing() {
               ['0 bytes', 'of your rent roll leave the browser. Parsing and matching run locally.'],
             ].map(([n, t]) => (
               <div key={n}>
-                <p className="t-display-sm num wipe-up font-medium">{n}</p>
-                <p className="t-small mx-auto mt-2 max-w-[26ch] text-ink/70">{t}</p>
+                <p className="t-stat num wipe-up">{n}</p>
+                <p className="t-small mx-auto mt-3 max-w-[26ch] text-ink/70">{t}</p>
               </div>
             ))}
           </div>
