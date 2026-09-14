@@ -7,6 +7,7 @@ import Equity from './Equity';
 import Vouchers from './Vouchers';
 import ReportCard from './ReportCard';
 import CashFlow from './CashFlow';
+import Retention from './Retention';
 import Clustering from './Clustering';
 import MomentumBadge from './MomentumBadge';
 
@@ -193,6 +194,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
       {/* ---- Cash flow ---- */}
       <CashFlow analysis={a} cap={cap} />
 
+      {/* ---- Retention: the same increases, net of move-out risk ---- */}
+      <Retention analysis={a} cap={cap} />
+
       {/* ---- Expirations ---- */}
       <section className="mt-20" aria-labelledby="expiries">
         <h3 id="expiries" className="t-h2">When your leases end</h3>
@@ -264,6 +268,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
           </p>
           <p>
             <strong className="text-ink">Cash flow</strong> applies each unit's proposed rent from the first full month after its lease ends and sums the portfolio month by month. <strong className="text-ink">Concentration</strong> is the share of monthly rent whose leases end in the same month; the staggered alternative spreads them across the three strongest seasonal months, balancing by rent.
+          </p>
+          <p>
+            <strong className="text-ink">Retention</strong> prices each increase two ways. If the tenant stays: <span className="num font-mono text-[0.95em]">increase × 12</span>. If they leave: <span className="num font-mono text-[0.95em]">(benchmark − rent) × 12 − (rent × months vacant + make-ready)</span>. The expected gain blends them at your leave rate; the break-even is the leave rate where it reaches zero.
           </p>
           <p>
             <strong className="text-ink">Vouchers</strong> compare each unit's rent to a Housing Choice Voucher payment standard, <span className="num font-mono text-[0.95em]">FMR × 90–110%</span>, set by the local housing authority. The upside is <span className="num font-mono text-[0.95em]">max(0, standard − rent) × 12</span>, subject to the authority's inspection and rent-reasonableness check.

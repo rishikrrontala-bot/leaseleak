@@ -276,3 +276,57 @@ export function expiryClustering(a: Analysis, curve: number[]): Clustering {
   const improves = !!peak && staggeredPeakShare < peak.share - 0.02;
   return { months, peak, totalRent, lossIfTwoLeave, topMonths, staggered, staggeredPeakShare, improves };
 }
+
+// ---- Retention: what a proposed increase is worth once move-out risk is priced in ----
+// If the tenant stays, the gain is the increase. If they leave, the unit re-lets at the
+// benchmark but sits vacant first and needs a make-ready. Expected value blends the two.
+export interface RetentionInputs {
+  leaveRate: number;      // share of tenants offered an increase who move out (0..1)
+  vacancyMonths: number;  // months empty before the next tenant pays
+  makeReady: number;      // $ to turn the unit (cleaning, paint, listing)
+}
+export interface RetentionRow {
+  unit: UnitResult;
+  increase: number;        // $/mo
+  gainStay: number;        // $/yr if the tenant renews at the new rent
+  gainLeave: number;       // $/yr if they leave: re-let at benchmark, minus vacancy and make-ready
+  turnoverCost: number;    // rent × vacancyMonths + makeReady
+  paybackMonths: number;   // months of the increase needed to recoup one move-out
+  expected: number;        // (1−p)·gainStay + p·gainLeave
+}
+export interface RetentionSummary {
+  rows: RetentionRow[];             // units with a proposed increase, riskiest first (longest payback)
+  offered: number;                  // units with an increase
+  gross: number;                    // Σ gainStay — what the headline assumes
+  expected: number;                 // Σ expected at the chosen leave rate
+  avgTurnoverCost: number;
+  breakEvenLeaveRate: number | null; // leave rate at which expected gain hits zero (null if it never does)
+}
+export const RETENTION_DEFAULTS: RetentionInputs = { leaveRate: 0.15, vacancyMonths: 1, makeReady: 1500 };
+export function retention(units: UnitResult[], inp: RetentionInputs = RETENTION_DEFAULTS): RetentionSummary {
+  const rows: RetentionRow[] = units
+    .filter((u) => (u.suggestedIncrease ?? 0) > 0 && u.fmr !== null)
+    .map((u) => {
+      const increase = u.suggestedIncrease!;
+      const gainStay = increase * 12;
+      const relet = Math.max(u.rent, u.fmr! - u.utilityAllowance);
+      const turnoverCost = u.rent * inp.vacancyMonths + inp.makeReady;
+      const gainLeave = (relet - u.rent) * 12 - turnoverCost;
+      return {
+        unit: u, increase, gainStay, gainLeave, turnoverCost,
+        paybackMonths: turnoverCost / increase,
+        expected: (1 - inp.leaveRate) * gainStay + inp.leaveRate * gainLeave,
+      };
+    })
+    .sort((a, b) => b.paybackMonths - a.paybackMonths);
+  const gross = rows.reduce((s, r) => s + r.gainStay, 0);
+  const expected = rows.reduce((s, r) => s + r.expected, 0);
+  const sumLeave = rows.reduce((s, r) => s + r.gainLeave, 0);
+  // expected(p) = gross + p·(sumLeave − gross) → zero at p = gross ÷ (gross − sumLeave)
+  const breakEvenLeaveRate = gross > 0 && sumLeave < 0 ? gross / (gross - sumLeave) : null;
+  return {
+    rows, offered: rows.length, gross, expected,
+    avgTurnoverCost: rows.length ? rows.reduce((s, r) => s + r.turnoverCost, 0) / rows.length : 0,
+    breakEvenLeaveRate: breakEvenLeaveRate !== null && breakEvenLeaveRate <= 1 ? breakEvenLeaveRate : null,
+  };
+}

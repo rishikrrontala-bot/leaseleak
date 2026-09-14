@@ -166,9 +166,9 @@ export default function Landing() {
           <div className="mt-24 md:mt-32" data-reveal>
             <div className="text-center">
               <p className="eyebrow text-ink/60">And on the same page</p>
-              <h3 className="t-h3 mt-3">Eight more reads of the same roll — <span className="serif text-[1.15em] font-normal">no extra input.</span></h3>
+              <h3 className="t-h3 mt-3">Nine more reads of the same roll — <span className="serif text-[1.15em] font-normal">no extra input.</span></h3>
             </div>
-            <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 ['Equity', 'The gap priced as building value: annual rent ÷ cap rate. $29,280 a year is about $488,000 at 6%.'],
                 ['Vouchers', 'Units below the Section 8 payment standard would earn more from a voucher household — a way to close the gap at turnover.'],
@@ -178,6 +178,7 @@ export default function Landing() {
                 ['Concentration', 'How much income comes up for renewal in one month, and a staggered calendar when it would help.'],
                 ['Utilities', 'Mark a building "we pay utilities" and the benchmark comparison adjusts, so the gap isn\'t overstated.'],
                 ['Fairness', 'Every proposed rent against the ZIP\'s median household income. Above 30% gets flagged before you send.'],
+                ['If they leave', 'Every increase priced with move-out risk: vacancy, make-ready, the re-let at benchmark — and the leave rate where it stops paying.'],
               ].map(([h, p]) => (
                 <li key={h} className="rounded-2xl bg-white/50 p-5 ring-1 ring-ink/8">
                   <h4 className="font-medium">{h}</h4>

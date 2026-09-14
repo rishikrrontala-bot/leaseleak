@@ -18,6 +18,7 @@ Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live
 10. **Concentration** — share of monthly rent whose leases end in the same month, the loss if the two largest don't renew, and a staggered calendar across the above-average seasonal months when it lowers the peak.
 11. **Utilities** — FMR is a gross rent; marking a building "we pay utilities" adds a typical allowance by bedroom count (`$95 / 120 / 150 / 180 / 210`) before comparing.
 12. **Fairness** — each proposed rent as a share of the ZIP's median household income (Census ACS 5-year); above 30% is flagged in the letters list and summarised before download.
+13. **If they leave** — every increase priced with turnover risk: stay = `increase × 12`; leave = `(benchmark − rent) × 12 − (rent × months vacant + make-ready)`; expected gain at an adjustable leave rate, payback months per unit, and the break-even leave rate.
 
 Everything runs in the browser. No upload, no account.
 
