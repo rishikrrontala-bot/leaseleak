@@ -1,22 +1,28 @@
 import { useMemo, useState } from 'react';
 import type { Analysis, UnitResult } from '../lib/types';
-import { fmtUSD, fmtPct, fmtDate, MONTHS, MONTHS_LONG } from '../lib/analyze';
+import { fmtUSD, fmtPct, fmtDate, MONTHS, MONTHS_LONG, UTILITY_ALLOWANCE } from '../lib/analyze';
 import { useRevealAll } from '../lib/reveal';
 import Letters from './Letters';
 import Equity from './Equity';
 import Vouchers from './Vouchers';
+import ReportCard from './ReportCard';
+import CashFlow from './CashFlow';
+import Clustering from './Clustering';
+import MomentumBadge from './MomentumBadge';
 
 interface Props {
   analysis: Analysis;
   fileName: string;
   cap: number;
   onCap: (c: number) => void;
+  utilities: Record<string, boolean>;
+  onUtilities: (property: string, paid: boolean) => void;
   onReset: () => void;
 }
 
 const money = (n: number) => fmtUSD(Math.round(n));
 
-export default function Results({ analysis: a, fileName, cap, onCap, onReset }: Props) {
+export default function Results({ analysis: a, fileName, cap, onCap, utilities, onUtilities, onReset }: Props) {
   const root = useRevealAll<HTMLDivElement>();
   const [view, setView] = useState<'gap' | 'timing'>('gap');
 
@@ -30,7 +36,7 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
     return Array.from(m.entries());
   }, [a.units]);
 
-  const maxRent = useMemo(() => Math.max(...a.units.map((u) => Math.max(u.rent, u.fmr ?? 0))), [a.units]);
+  const maxRent = useMemo(() => Math.max(...a.units.map((u) => Math.max(u.effectiveRent, u.fmr ?? 0))), [a.units]);
 
   // 12-month window starting this month
   const months = useMemo(() => {
@@ -102,6 +108,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
       {/* ---- Equity ---- */}
       <Equity analysis={a} cap={cap} />
 
+      {/* ---- Building report cards ---- */}
+      <ReportCard analysis={a} />
+
       {/* ---- Unit bars ---- */}
       <section className="mt-16" aria-labelledby="units">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -128,20 +137,31 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
             const first = units[0];
             return (
               <div key={prop}>
-                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-paper/10 pb-2">
-                  <h4 className="t-h3">{prop}</h4>
-                  <p className="t-small text-paper/70">
-                    {first.city && first.state ? `${first.city}, ${first.state} · ` : ''}ZIP {first.zip}
-                    {first.zoriRent ? ` · Zillow typical asking rent ${money(first.zoriRent)}${first.zoriYoY !== null ? ` (${first.zoriYoY >= 0 ? '+' : ''}${fmtPct(first.zoriYoY)} YoY)` : ''}` : ''}
-                    {' · '}<span className="text-ember-3 num">{money(gap)}/yr under</span>
-                  </p>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-paper/10 pb-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h4 className="t-h3">{prop}</h4>
+                    <MomentumBadge yoy={first.zoriYoY} />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <p className="t-small text-paper/70">
+                      {first.city && first.state ? `${first.city}, ${first.state} · ` : ''}ZIP {first.zip}
+                      {first.zoriRent ? ` · Zillow asking ${money(first.zoriRent)}` : ''}
+                      {' · '}<span className="text-ember-3 num">{money(gap)}/yr under</span>
+                    </p>
+                    {first.property && (
+                      <label className="t-small flex cursor-pointer items-center gap-2 text-paper/70" title="HUD's benchmark is a gross rent. If you pay utilities here, we add a typical allowance before comparing.">
+                        <input type="checkbox" className="h-4 w-4 accent-ember" checked={!!utilities[prop]} onChange={(e) => onUtilities(prop, e.target.checked)} />
+                        We pay utilities
+                      </label>
+                    )}
+                  </div>
                 </div>
                 <ul className="space-y-2">
                   {units.map((u) => (
                     <li key={u.rowIndex} className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 sm:grid-cols-[6rem_1fr_11rem]">
                       <div className="t-small">
                         <span className="font-semibold">{u.id}</span>
-                        <span className="block text-paper/60">{u.bedrooms === 0 ? 'Studio' : `${u.bedrooms} BR`}</span>
+                        <span className="block text-paper/60">{u.bedrooms === 0 ? 'Studio' : `${u.bedrooms} BR`}{u.utilityAllowance ? ` · +${money(u.utilityAllowance)} util.` : ''}</span>
                       </div>
                       {view === 'gap' ? (
                         <GapBar u={u} max={maxRent} />
@@ -151,9 +171,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
                       <div className="t-small text-right num">
                         {view === 'gap' ? (
                           u.fmr === null ? <span className="text-paper/50">No HUD data for ZIP</span> : (u.gapMonthly ?? 0) > 0 ? (
-                            <><span className="font-semibold text-ember-3">{money(u.gapAnnual!)}/yr</span><span className="block text-paper/60">{money(u.rent)} vs {money(u.fmr)}</span></>
+                            <><span className="font-semibold text-ember-3">{money(u.gapAnnual!)}/yr</span><span className="block text-paper/60">{money(u.effectiveRent)} vs {money(u.fmr)}</span></>
                           ) : (
-                            <><span className="font-semibold text-mint">At or above</span><span className="block text-paper/60">{money(u.rent)} vs {money(u.fmr)}</span></>
+                            <><span className="font-semibold text-mint">At or above</span><span className="block text-paper/60">{money(u.effectiveRent)} vs {money(u.fmr)}</span></>
                           )
                         ) : (
                           u.leaseEnd ? (
@@ -169,6 +189,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
           })}
         </div>
       </section>
+
+      {/* ---- Cash flow ---- */}
+      <CashFlow analysis={a} cap={cap} />
 
       {/* ---- Expirations ---- */}
       <section className="mt-20" aria-labelledby="expiries">
@@ -204,6 +227,7 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
             )}
           </div>
         </div>
+        <Clustering analysis={a} curve={curve} />
       </section>
 
       {/* ---- Vouchers ---- */}
@@ -233,10 +257,19 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
             <strong className="text-paper">Equity</strong> prices the gap the way a buyer would: <span className="num font-mono text-[0.95em]">value = annual rent ÷ cap rate</span>. It assumes the recovered rent flows through to net operating income; the cap rate is yours to set.
           </p>
           <p>
+            <strong className="text-paper">Utilities.</strong> Fair Market Rent is a gross rent. When you mark a building "we pay utilities", we add a typical allowance by bedroom count ({UTILITY_ALLOWANCE.map((v, i) => `${i === 0 ? 'studio' : `${i}BR`} $${v}`).join(', ')} per month) to your rent before comparing, so the gap isn't overstated. HUD's own allowance schedules vary by housing authority.
+          </p>
+          <p>
+            <strong className="text-paper">Grades</strong> are the share of a building's gross rent left on the table: under 2% is an A, under 5% a B, under 9% a C, under 14% a D. <strong className="text-paper">Momentum</strong> is the ZIP's year-over-year change in Zillow's asking-rent index: rising above +3%, softening below −1%.
+          </p>
+          <p>
+            <strong className="text-paper">Cash flow</strong> applies each unit's proposed rent from the first full month after its lease ends and sums the portfolio month by month. <strong className="text-paper">Concentration</strong> is the share of monthly rent whose leases end in the same month; the staggered alternative spreads them across the three strongest seasonal months, balancing by rent.
+          </p>
+          <p>
             <strong className="text-paper">Vouchers</strong> compare each unit's rent to a Housing Choice Voucher payment standard, <span className="num font-mono text-[0.95em]">FMR × 90–110%</span>, set by the local housing authority. The upside is <span className="num font-mono text-[0.95em]">max(0, standard − rent) × 12</span>, subject to the authority's inspection and rent-reasonableness check.
           </p>
           <p className="t-small text-paper/60">
-            Sources: HUD User, FY2027 Small Area FMRs (public domain). Zillow Research, ZORI ZIP-level (free for non-commercial use, attribution required). Letters are drafts, not legal advice — check your state's notice and rent-increase rules.
+            Sources: HUD User, FY2027 Small Area FMRs (public domain). Zillow Research, ZORI ZIP-level (free for non-commercial use, attribution required).{a.incomeVintage ? ` U.S. Census Bureau, ${a.incomeVintage} estimates, median household income by ZIP (public domain).` : ''} Letters are drafts, not legal advice — check your state's notice and rent-increase rules.
           </p>
         </div>
       </section>
@@ -255,14 +288,14 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
 }
 
 function GapBar({ u, max }: { u: UnitResult; max: number }) {
-  const rentW = (u.rent / max) * 100;
+  const rentW = (u.effectiveRent / max) * 100;
   const fmrW = ((u.fmr ?? u.rent) / max) * 100;
   const under = (u.gapMonthly ?? 0) > 0;
   return (
     <div className="relative h-7 rounded-md bg-field-2" aria-label={`Rent ${money(u.rent)}, benchmark ${u.fmr !== null ? money(u.fmr) : 'unknown'}`}>
       {/* benchmark ghost */}
       {u.fmr !== null && <div className="absolute inset-y-0 left-0 rounded-md bg-paper/10" style={{ width: `${fmrW}%` }} />}
-      {/* current rent */}
+      {/* current rent (plus any utility allowance) */}
       <div className={`absolute inset-y-0 left-0 rounded-md ${under ? 'bg-paper/80' : 'bg-mint-2'}`} style={{ width: `${rentW}%` }} />
       {/* gap */}
       {under && u.fmr !== null && (

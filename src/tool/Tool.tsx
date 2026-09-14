@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Dropzone from './Dropzone';
 import Results from './Results';
 import { parseCsvText, parseFile } from '../lib/parse';
-import { analyze, loadSafmr, loadZori, preloadData } from '../lib/analyze';
+import { analyze, loadIncome, loadSafmr, loadZori, preloadData } from '../lib/analyze';
 import { SAMPLE_CSV } from '../lib/sample';
 import type { ParsedRoll } from '../lib/types';
 import { Link } from '../lib/router';
@@ -13,6 +13,7 @@ export default function Tool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cap, setCap] = useState(0.06);
+  const [utilities, setUtilities] = useState<Record<string, boolean>>({});
   const [data, setData] = useState<Awaited<ReturnType<typeof loadBoth>> | null>(null);
 
   useEffect(() => { preloadData(); }, []);
@@ -24,6 +25,7 @@ export default function Tool() {
     }
     const d = await loadBoth();
     setData(d);
+    setUtilities({});
     setRoll(parsed);
     setFileName(name);
     setError(null);
@@ -46,7 +48,8 @@ export default function Tool() {
     finally { setBusy(false); }
   }, [ingest]);
 
-  const analysis = useMemo(() => (roll && data ? analyze(roll.units, data.safmr, data.zori, cap) : null), [roll, data, cap]);
+  const analysis = useMemo(() => (roll && data ? analyze(roll.units, data.safmr, data.zori, cap, new Date(), { utilities, income: data.income }) : null), [roll, data, cap, utilities]);
+  const onUtilities = useCallback((property: string, paid: boolean) => setUtilities((u) => ({ ...u, [property]: paid })), []);
 
   return (
     <main className="min-h-screen px-5 pb-24 pt-6 sm:px-8">
@@ -80,7 +83,7 @@ export default function Tool() {
               {roll.issues.length} row{roll.issues.length === 1 ? '' : 's'} skipped: {roll.issues.slice(0, 4).map((i) => `row ${i.row} (${i.message.toLowerCase()})`).join(', ')}{roll.issues.length > 4 ? '…' : ''}
             </p>
           )}
-          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} onReset={() => { setRoll(null); setError(null); window.scrollTo({ top: 0 }); }} />
+          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} utilities={utilities} onUtilities={onUtilities} onReset={() => { setRoll(null); setError(null); window.scrollTo({ top: 0 }); }} />
         </>
       )}
     </main>
@@ -88,8 +91,9 @@ export default function Tool() {
 }
 
 async function loadBoth() {
-  const [safmr, zori] = await Promise.all([loadSafmr(), loadZori()]);
-  return { safmr, zori };
+  // income is optional: the fairness check is skipped if it fails to load
+  const [safmr, zori, income] = await Promise.all([loadSafmr(), loadZori(), loadIncome().catch(() => null)]);
+  return { safmr, zori, income };
 }
 
 export function Logo({ className = 'h-6 w-6' }: { className?: string }) {

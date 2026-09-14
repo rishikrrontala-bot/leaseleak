@@ -1,8 +1,9 @@
-"""Build public/data/safmr.json and public/data/zori.json from the raw source files.
+"""Build public/data/{safmr,zori,income}.json from the raw source files.
 
 Inputs (download first):
   FY27_safmrs.xlsx  https://www.huduser.gov/portal/datasets/fmr/fmr2027/FY27_safmrs.xlsx
   zori_zip.csv      https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv
+  data/acsdt5y2023-b19013.dat  (optional) https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/data/5YRData/acsdt5y2023-b19013.dat
 Usage: python3 scripts/build-data.py FY27_safmrs.xlsx zori_zip.csv
 """
 import csv, json, statistics, sys
@@ -56,3 +57,19 @@ for z, metro, lm, latest, yoy, seas, city, state in rows:
     zori[z] = e
 json.dump({'asof': months[-1][:7], 'national': nat_seas, 'metros': metros, 'metroSeason': [metro_seas[m] for m in metros], 'zips': zori}, open(OUT + 'zori.json', 'w'), separators=(',', ':'))
 print('safmr', len(zips), 'zori', len(zori))
+
+# ---- Census ACS 5-year median household income by ZCTA (B19013) ----
+# Source (no API key needed): https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/data/5YRData/acsdt5y2023-b19013.dat
+# Download to data/acsdt5y2023-b19013.dat. Rows are GEO_ID|estimate|MOE; ZCTAs are summary level 860 ("860Z200US" + ZIP).
+income = {}
+try:
+    with open('data/acsdt5y2023-b19013.dat') as f:
+        next(f)
+        for line in f:
+            geo, est, _ = line.rstrip('\n').split('|')
+            if geo.startswith('860Z200US') and est and int(est) > 0:
+                income[geo[-5:]] = int(est)
+    json.dump({'vintage': '2019–2023 ACS 5-year', 'zips': income}, open(OUT + 'income.json', 'w'), separators=(',', ':'))
+    print('income', len(income))
+except FileNotFoundError:
+    print('income: data/acsdt5y2023-b19013.dat not found, skipped')

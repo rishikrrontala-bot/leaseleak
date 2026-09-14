@@ -12,6 +12,12 @@ Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live
 4. **Write** — one renewal letter per unit: `new rent = min(SAFMR, rent × (1 + cap))`, the term, notice language. Download all as PDF.
 5. **Value** — the gap priced as building equity: `value = Σ gap ÷ cap rate`. On the sample portfolio $29,280/yr is ~$488,000 of value at a 6% cap. Cap rate is adjustable (4–10%).
 6. **Vouchers** — HUD FMR is also the basis for Housing Choice Voucher payment standards. Units below the standard (`FMR × 90–110%`, set per housing authority) would earn `max(0, standard − rent) × 12` more from a voucher household — a way to close the gap at turnover without raising rent on a sitting tenant.
+7. **Twelve months** — projected monthly income under three policies (do nothing / proposed renewals / every renewal at benchmark), each increase applied the month after its lease ends.
+8. **Building grades** — one A–F grade per property on `gap ÷ gross rent` (A < 2%, B < 5%, C < 9%, D < 14%), sorted worst-first with $/door and a one-line diagnosis.
+9. **Momentum** — the ZIP's ZORI year-over-year move classified as rising (≥ +3%), steady, or softening (≤ −1%), with renewal advice.
+10. **Concentration** — share of monthly rent whose leases end in the same month, the loss if the two largest don't renew, and a staggered calendar across the above-average seasonal months when it lowers the peak.
+11. **Utilities** — FMR is a gross rent; marking a building "we pay utilities" adds a typical allowance by bedroom count (`$95 / 120 / 150 / 180 / 210`) before comparing.
+12. **Fairness** — each proposed rent as a share of the ZIP's median household income (Census ACS 5-year); above 30% is flagged in the letters list and summarised before download.
 
 Everything runs in the browser. No upload, no account.
 
@@ -28,6 +34,7 @@ npm run dev
 
 - HUD User, *FY2027 Small Area Fair Market Rents* — public domain. https://www.huduser.gov/portal/datasets/fmr/smallarea/index.html
 - Zillow Research, *ZORI (ZIP level, smoothed, all homes)* — © Zillow, free for non-commercial use with attribution. https://www.zillow.com/research/data/
+- U.S. Census Bureau, *ACS 5-year 2019–2023, table B19013 (median household income by ZCTA)* — public domain. Built from the table-based summary file, no API key needed. https://www2.census.gov/programs-surveys/acs/summary_file/2023/table-based-SF/
 - Photographs: CC BY-SA 4.0 / CC0 via Wikimedia Commons — see `public/photos/ATTRIBUTION.md`.
 - Satoshi typeface — Indian Type Foundry, via Fontshare (free licence).
 - Stack: React 19, Vite, Tailwind v4, PapaParse, SheetJS, jsPDF, three.js / React Three Fiber.

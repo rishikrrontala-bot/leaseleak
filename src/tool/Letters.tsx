@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Analysis } from '../lib/types';
 import { buildLetter, lettersToPdf } from '../lib/letters';
-import { fmtUSD, MONTHS_LONG } from '../lib/analyze';
+import { fmtUSD, fmtPct, MONTHS_LONG } from '../lib/analyze';
 
 export default function Letters({ analysis: a }: { analysis: Analysis }) {
   const [landlord, setLandlord] = useState(() => { try { return localStorage.getItem('ll.landlord') ?? ''; } catch { return ''; } });
@@ -28,6 +28,10 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
     return u ? buildLetter(u, opts) : null;
   }, [a.units, preview, opts]);
   const totalIncrease = letters.reduce((s, l) => s + (l.newRent - l.unit.rent) * 12, 0);
+  // fairness: the proposed rent as a share of the ZIP's median household income; 30% is the usual affordability line
+  const BURDEN_LINE = 0.3;
+  const burdened = letters.filter((l) => l.unit.medianIncome && (l.newRent * 12) / l.unit.medianIncome > BURDEN_LINE);
+  const withIncome = letters.filter((l) => l.unit.medianIncome).length;
 
   const toggle = (id: number) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
@@ -71,7 +75,12 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
                     <input type="checkbox" checked={selected.has(u.rowIndex)} onChange={() => toggle(u.rowIndex)} className="h-4 w-4 accent-ember" />
                     <button type="button" className="flex flex-1 items-center justify-between text-left" onClick={() => setPreview(u.rowIndex)}>
                       <span className="t-small"><span className="font-semibold">Unit {u.id}</span> <span className="text-paper/60">· {u.tenant ?? 'Resident'}</span></span>
-                      <span className="t-small num text-paper/70">{u.suggestedIncrease ? `+${fmtUSD(u.suggestedIncrease)}/mo` : 'no change'}</span>
+                      <span className="t-small num flex items-center gap-2 text-paper/70">
+                        {u.proposedBurden !== null && u.proposedBurden > BURDEN_LINE && (
+                          <span className="inline-block h-2 w-2 rounded-full bg-ember" title={`Proposed rent is ${fmtPct(u.proposedBurden, 0)} of the ZIP's median household income`} aria-label="Above the 30% affordability line" />
+                        )}
+                        {u.suggestedIncrease ? `+${fmtUSD(u.suggestedIncrease)}/mo` : 'no change'}
+                      </span>
                     </button>
                   </label>
                 </li>
@@ -88,6 +97,27 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
             </button>
             <span className="t-small num text-paper/70">{fmtUSD(Math.round(totalIncrease))}/yr in proposed increases</span>
           </div>
+
+          {withIncome > 0 && (
+            <div className="mt-6 rounded-2xl bg-field-2 px-5 py-4">
+              <p className="t-micro uppercase tracking-[0.14em] text-paper/60">Fairness check</p>
+              {burdened.length === 0 ? (
+                <p className="t-small mt-2 text-paper/75">
+                  Every proposed rent is under 30% of its ZIP's median household income — the usual affordability line. These are increases a tenant can absorb.
+                </p>
+              ) : (
+                <>
+                  <p className="t-small mt-2 text-paper/75">
+                    <span className="font-semibold text-ember-3">{burdened.length} of {withIncome}</span> proposed rents would be above 30% of the ZIP's median household income.
+                    Those tenants are the likeliest to move — consider a smaller increase or a longer term for them.
+                  </p>
+                  <ul className="t-small mt-2 flex flex-wrap gap-x-4 gap-y-1 text-paper/60">
+                    {burdened.map((l) => <li key={l.unit.rowIndex} className="num">Unit {l.unit.id} · {fmtPct((l.newRent * 12) / l.unit.medianIncome!, 0)}</li>)}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Paper preview — the material switch */}
@@ -104,6 +134,7 @@ export default function Letters({ analysis: a }: { analysis: Analysis }) {
                   </div>
                   <p className="t-micro mt-8 text-ink-2/70">
                     New rent {fmtUSD(previewLetter.newRent)} · {previewLetter.termMonths}-month term{previewLetter.newEnd ? ` ending ${MONTHS_LONG[previewLetter.newEnd.getMonth()]} ${previewLetter.newEnd.getFullYear()}` : ''} · HUD benchmark {fmtUSD(previewLetter.unit.fmr ?? 0)}
+                    {previewLetter.unit.medianIncome ? ` · ${fmtPct((previewLetter.newRent * 12) / previewLetter.unit.medianIncome, 0)} of the ZIP's median household income (${fmtUSD(previewLetter.unit.medianIncome)})` : ''}
                   </p>
                 </>
               ) : (

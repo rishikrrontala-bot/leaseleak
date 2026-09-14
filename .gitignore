@@ -5,3 +5,4 @@ dist
 .claude
 scripts/engine-test.ts
 demo/out
+/data/

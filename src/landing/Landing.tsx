@@ -150,8 +150,6 @@ export default function Landing() {
                 ['Measure', 'Benchmark minus rent, per unit, per month. Units above the benchmark count for nothing; units below count twelve times.'],
                 ['Time', 'Zillow\'s rent index for your ZIP becomes a 12-month seasonal curve. A lease ending in the trough re-signs at the trough; we quantify the difference and pick a term that ends at the peak.'],
                 ['Write', 'One renewal letter per unit: the new rent (capped, never above the benchmark), the term, the notice language. Download all as a PDF.'],
-                ['Value', 'The same gap, priced the way a buyer prices a building: annual rent divided by a cap rate. $29,280 a year is roughly half a million dollars of equity at 6%.'],
-                ['Vouchers', 'HUD\'s benchmark is also the Housing Choice Voucher payment standard. Units below it would earn more from a voucher household — a way to close the gap at turnover without raising rent on anyone.'],
               ].map(([h, p], i) => (
                 <li key={h} className="grid grid-cols-[3rem_1fr] gap-4">
                   <span className="t-h3 num text-ember-3">0{i + 1}</span>
@@ -175,6 +173,28 @@ export default function Landing() {
               <p>voucher<sub>unit</sub> = max(0, SAFMR<sub>zip,br</sub> × standard − rent) × 12</p>
             </div>
           </div>
+        </div>
+
+        <div className="mt-20 md:mt-28" data-reveal>
+          <h3 className="t-h3">And on the same page</h3>
+          <p className="t-body measure mt-2 text-paper/75">Eight more reads of the same roll — no extra input, all from public data.</p>
+          <ul className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Equity', 'The gap priced as building value: annual rent ÷ cap rate. $29,280 a year is about $488,000 at 6%.'],
+              ['Vouchers', 'Units below the Section 8 payment standard would earn more from a voucher household — a way to close the gap at turnover.'],
+              ['Twelve months', 'Monthly income as each lease turns, under three policies: do nothing, proposed renewals, every renewal at benchmark.'],
+              ['Building grades', 'One grade per property on the share of rent left on the table, worst first — the order to work in.'],
+              ['Momentum', 'Each ZIP\'s year-over-year asking-rent move, and what it means: push now, hold steady, or favour retention.'],
+              ['Concentration', 'How much income comes up for renewal in one month, and a staggered calendar when it would help.'],
+              ['Utilities', 'Mark a building "we pay utilities" and the benchmark comparison adjusts, so the gap isn\'t overstated.'],
+              ['Fairness', 'Every proposed rent against the ZIP\'s median household income. Above 30% gets flagged before you send.'],
+            ].map(([h, p]) => (
+              <li key={h} className="border-t border-paper/15 pt-4">
+                <h4 className="font-semibold">{h}</h4>
+                <p className="t-small mt-1.5 text-paper/70">{p}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -220,7 +240,7 @@ export default function Landing() {
           <div className="grid gap-6 md:grid-cols-12" data-reveal>
             <h2 className="t-h2 md:col-span-7"><span className="wipe-line">Everything</span><br /><span className="wipe-line">on one page.</span></h2>
             <div className="md:col-span-5 md:self-end">
-              <p className="t-body measure text-paper/75">The headline, the equity it represents, the unit-by-unit bars, the seasonal calendar, the voucher option and the letters are one live page — on the sample portfolio or on your own file.</p>
+              <p className="t-body measure text-paper/75">The headline, the equity behind it, building grades, the unit-by-unit bars, twelve months of cash flow, the seasonal calendar, the voucher option and the letters are one live page — on the sample portfolio or on your own file.</p>
               <Link to="/app" className="link-arrow mt-4">Open the tool <Arrow /></Link>
             </div>
           </div>

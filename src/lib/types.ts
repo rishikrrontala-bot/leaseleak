@@ -48,7 +48,14 @@ export interface ZoriData {
   zips: Record<string, ZoriZip>;
 }
 
+export interface IncomeData {
+  vintage: string;
+  zips: Record<string, number>;  // ZIP -> median household income (ACS 5-year)
+}
+
 export interface UnitResult extends Unit {
+  utilityAllowance: number;      // $/mo the landlord covers (0 unless the building is marked utilities-included)
+  effectiveRent: number;         // rent + utilityAllowance — what FMR (a gross rent) is compared against
   fmr: number | null;            // HUD SAFMR for zip+bedrooms
   areaName: string | null;
   gapMonthly: number | null;     // fmr - rent (positive = under benchmark)
@@ -66,8 +73,16 @@ export interface UnitResult extends Unit {
   bestIndex: number;
   timingValueAnnual: number | null; // rent * (best/curr - 1) * 12
   daysToExpiry: number | null;
-  suggestedRent: number | null;  // min(fmr, rent*(1+cap)) but never below rent
+  suggestedRent: number | null;  // min(fmr − allowance, rent*(1+cap)) but never below rent
   suggestedIncrease: number | null;
+  medianIncome: number | null;   // ZIP median household income
+  currentBurden: number | null;  // rent×12 ÷ median income
+  proposedBurden: number | null; // suggestedRent×12 ÷ median income
+}
+
+export interface AnalyzeOptions {
+  utilities?: Record<string, boolean>;  // property -> landlord pays utilities
+  income?: IncomeData | null;
 }
 
 export interface Analysis {
@@ -87,4 +102,5 @@ export interface Analysis {
   asOf: Date;
   fy: number;
   zoriAsOf: string;
+  incomeVintage: string | null;
 }
