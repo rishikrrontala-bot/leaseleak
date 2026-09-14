@@ -6,3 +6,8 @@ dist
 scripts/engine-test.ts
 demo/out
 /data/
+
+# secrets & vercel
+.env
+.env.*
+.vercel/

@@ -8,6 +8,7 @@ import Vouchers from './Vouchers';
 import ReportCard from './ReportCard';
 import CashFlow from './CashFlow';
 import Retention from './Retention';
+import Plan from './Plan';
 import Clustering from './Clustering';
 import MomentumBadge from './MomentumBadge';
 
@@ -18,12 +19,13 @@ interface Props {
   onCap: (c: number) => void;
   utilities: Record<string, boolean>;
   onUtilities: (property: string, paid: boolean) => void;
+  aiNotes?: string[];
   onReset: () => void;
 }
 
 const money = (n: number) => fmtUSD(Math.round(n));
 
-export default function Results({ analysis: a, fileName, cap, onCap, utilities, onUtilities, onReset }: Props) {
+export default function Results({ analysis: a, fileName, cap, onCap, utilities, onUtilities, aiNotes = [], onReset }: Props) {
   const root = useRevealAll<HTMLDivElement>();
   const [view, setView] = useState<'gap' | 'timing'>('gap');
 
@@ -72,6 +74,11 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
           <p className="t-small mt-1 text-ink/60">
             {a.units.length} units · {a.matched} matched to a HUD benchmark{a.unmatched ? ` · ${a.unmatched} unmatched ZIP` : ''} · as of {fmtDate(a.asOf)}
           </p>
+          {aiNotes.length > 0 && (
+            <ul className="t-small mt-2 space-y-0.5 text-ink/70">
+              {aiNotes.map((n, i) => <li key={i} className="flex gap-2"><span className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-ember" />{n}</li>)}
+            </ul>
+          )}
         </div>
         <button type="button" className="btn-ghost" onClick={onReset}>Upload another roll</button>
       </div>
@@ -105,6 +112,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
         <span className="num t-small w-12 font-semibold">{fmtPct(cap, 0)}</span>
         <span className="t-small text-ink/60">Most small landlords keep renewals under 5–8% to hold good tenants. The cap never pushes a unit above its HUD benchmark.</span>
       </div>
+
+      {/* ---- The advisor: AI reads the engine's numbers, writes the plan ---- */}
+      <Plan analysis={a} cap={cap} curve={curve} />
 
       {/* ---- Equity ---- */}
       <Equity analysis={a} cap={cap} />
@@ -162,7 +172,7 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
                     <li key={u.rowIndex} className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 sm:grid-cols-[6rem_1fr_11rem]">
                       <div className="t-small">
                         <span className="font-semibold">{u.id}</span>
-                        <span className="block text-ink/60">{u.bedrooms === 0 ? 'Studio' : `${u.bedrooms} BR`}{u.utilityAllowance ? ` · +${money(u.utilityAllowance)} util.` : ''}</span>
+                        <span className="block text-ink/60">{u.bedrooms === 0 ? 'Studio' : `${u.bedrooms} BR`}{u.utilityAllowance ? ` · +${money(u.utilityAllowance)} util.` : ''}{u.zipInferred ? <span title="ZIP inferred by AI from the address — verify" className="ml-1 text-ember-3">· ZIP {u.zip}?</span> : null}</span>
                       </div>
                       {view === 'gap' ? (
                         <GapBar u={u} max={maxRent} />

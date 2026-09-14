@@ -93,8 +93,15 @@ export function parseZip(v: unknown): string | null {
   return null;
 }
 
-export function rowsToUnits(rows: RawRow[], headers: string[]): ParsedRoll {
-  const columns = detectColumns(headers);
+export interface ParseOverrides {
+  columns?: Record<string, string | null>;   // AI column mapping: fills gaps the heuristics left
+  zipByRow?: Record<number, string>;         // AI-inferred ZIPs keyed by row number
+}
+
+export function rowsToUnits(rows: RawRow[], headers: string[], overrides: ParseOverrides = {}): ParsedRoll {
+  const detected = detectColumns(headers);
+  const columns: Record<string, string | null> = { ...detected };
+  for (const [k, v] of Object.entries(overrides.columns ?? {})) if (v && headers.includes(v)) columns[k] = v;
   const issues: ParseIssue[] = [];
   const units: Unit[] = [];
   const get = (r: RawRow, k: string) => (columns[k] ? r[columns[k] as string] : undefined);
@@ -106,6 +113,8 @@ export function rowsToUnits(rows: RawRow[], headers: string[]): ParsedRoll {
     const rent = parseMoney(get(r, 'rent'));
     let zip = parseZip(get(r, 'zip'));
     if (!zip && columns.property) zip = parseZip(get(r, 'property'));
+    let zipInferred = false;
+    if (!zip && overrides.zipByRow?.[rowNum]) { zip = overrides.zipByRow[rowNum]; zipInferred = true; }
     const bedrooms = parseBedrooms(get(r, 'bedrooms'));
     if (rent === null) { issues.push({ row: rowNum, message: 'No rent found' }); return; }
     if (!zip) { issues.push({ row: rowNum, message: 'No 5-digit ZIP found' }); return; }
@@ -120,9 +129,10 @@ export function rowsToUnits(rows: RawRow[], headers: string[]): ParsedRoll {
       leaseStart: parseDate(get(r, 'leaseStart')),
       tenant: get(r, 'tenant') != null ? String(get(r, 'tenant')) : undefined,
       rowIndex: rowNum,
+      zipInferred: zipInferred || undefined,
     });
   });
-  return { units, issues, columns, totalRows: rows.length };
+  return { units, issues, columns, totalRows: rows.length, rows, headers };
 }
 
 export async function parseFile(file: File): Promise<ParsedRoll> {

@@ -4,6 +4,7 @@ import { SAMPLE_CSV, TEMPLATE_CSV } from '../lib/sample';
 interface Props {
   onFile: (file: File) => void;
   onSample: () => void;
+  onMessy?: () => void;   // the PM-software export that needs the AI fallback
   busy: boolean;
   error: string | null;
 }
@@ -16,7 +17,7 @@ function download(name: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function Dropzone({ onFile, onSample, busy, error }: Props) {
+export default function Dropzone({ onFile, onSample, onMessy, busy, error }: Props) {
   const [over, setOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +51,7 @@ export default function Dropzone({ onFile, onSample, busy, error }: Props) {
         </svg>
         <p className="t-h3 mb-2">{busy ? 'Reading your rent roll…' : 'Drop your rent roll here'}</p>
         <p className="t-body mx-auto max-w-md text-ink/70">
-          CSV or Excel. Any column names — we look for unit, ZIP, bedrooms, rent and lease end. Nothing leaves your browser.
+          CSV or Excel, any column names. Your file is read here in the browser; if the columns are too odd to recognise, you can ask AI to map them.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <span className="btn-solid">Choose a file</span>
@@ -62,6 +63,17 @@ export default function Dropzone({ onFile, onSample, busy, error }: Props) {
           >
             Try the sample roll (16 units)
           </button>
+          {onMessy && (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={(e) => { e.stopPropagation(); onMessy(); }}
+              disabled={busy}
+              title="The same buildings exported by property-management software: no ZIP column, odd headers"
+            >
+              Try a messy export
+            </button>
+          )}
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 t-small text-ink/60">

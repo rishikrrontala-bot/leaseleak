@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Dropzone from './Dropzone';
 import Results from './Results';
-import { parseCsvText, parseFile } from '../lib/parse';
+import { parseCsvText, parseFile, rowsToUnits } from '../lib/parse';
 import { analyze, loadIncome, loadSafmr, loadZori, preloadData } from '../lib/analyze';
-import { SAMPLE_CSV } from '../lib/sample';
+import { SAMPLE_CSV, SAMPLE_MESSY_CSV } from '../lib/sample';
+import { aiAvailable, inferZips, mapColumns } from '../lib/ai';
 import type { ParsedRoll } from '../lib/types';
 import Nav from '../ui/Nav';
 export { Logo } from '../ui/Logo';
@@ -15,11 +16,20 @@ export default function Tool() {
   const [error, setError] = useState<string | null>(null);
   const [cap, setCap] = useState(0.06);
   const [utilities, setUtilities] = useState<Record<string, boolean>>({});
+  const [aiNotes, setAiNotes] = useState<string[]>([]);
+  // a roll the heuristics couldn't read, held so the AI fallback can try
+  const [repairable, setRepairable] = useState<{ parsed: ParsedRoll; name: string } | null>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof loadBoth>> | null>(null);
 
   useEffect(() => { preloadData(); }, []);
 
-  const ingest = useCallback(async (parsed: ParsedRoll, name: string) => {
+  const ingest = useCallback(async (parsed: ParsedRoll, name: string, notes: string[] = []) => {
+    const skipped = parsed.totalRows - parsed.units.length;
+    // Heuristics failed on most of the file: offer the AI fallback instead of an error.
+    if ((parsed.units.length === 0 || skipped / Math.max(1, parsed.totalRows) >= 0.3) && aiAvailable() && notes.length === 0) {
+      setRepairable({ parsed, name });
+      if (parsed.units.length === 0) return;
+    }
     if (parsed.units.length === 0) {
       const why = parsed.issues.slice(0, 3).map((i) => `row ${i.row}: ${i.message}`).join('; ');
       throw new Error(`No usable rows. We need at least a rent and a 5-digit ZIP per row. ${why ? `(${why})` : ''}`);
@@ -27,14 +37,53 @@ export default function Tool() {
     const d = await loadBoth();
     setData(d);
     setUtilities({});
+    setAiNotes(notes);
     setRoll(parsed);
     setFileName(name);
     setError(null);
     window.scrollTo({ top: 0 });
   }, []);
 
-  const onFile = useCallback(async (file: File) => {
+  // The AI fallback: map columns the heuristics missed, then infer ZIPs from addresses.
+  const aiRepair = useCallback(async () => {
+    if (!repairable) return;
+    const { parsed, name } = repairable;
     setBusy(true); setError(null);
+    try {
+      const notes: string[] = [];
+      const sample = parsed.rows.slice(0, 6);
+      const m = await mapColumns(parsed.headers, sample);
+      const mapped = Object.entries(m.data).filter(([k, v]) => v && v !== parsed.columns[k]);
+      if (mapped.length) notes.push(`AI mapped ${mapped.map(([k, v]) => `${label(k)} ← "${v}"`).join(', ')}.`);
+      let next = rowsToUnits(parsed.rows, parsed.headers, { columns: m.data });
+
+      // rows still lacking a ZIP but carrying an address: ask for the ZIP
+      const propCol = next.columns.property;
+      const missing = next.issues.filter((i) => /ZIP/.test(i.message));
+      if (propCol && missing.length) {
+        const addrByRow = new Map<number, string>();
+        parsed.rows.forEach((r, i) => { const a = r[propCol]; if (a != null && String(a).trim()) addrByRow.set(i + 2, String(a).trim()); });
+        const addresses = Array.from(new Set(missing.map((i) => addrByRow.get(i.row)).filter(Boolean) as string[]));
+        if (addresses.length) {
+          const z = await inferZips(addresses);
+          const zipFor = new Map(z.data.results.filter((r) => r.zip && r.confidence !== 'low').map((r) => [r.address, r.zip!]));
+          const zipByRow: Record<number, string> = {};
+          for (const i of missing) { const a = addrByRow.get(i.row); if (a && zipFor.has(a)) zipByRow[i.row] = zipFor.get(a)!; }
+          const n = Object.keys(zipByRow).length;
+          if (n) notes.push(`AI inferred ${n} ZIP${n === 1 ? '' : 's'} from street addresses — marked “?” below; verify before you send anything.`);
+          next = rowsToUnits(parsed.rows, parsed.headers, { columns: m.data, zipByRow });
+        }
+      }
+      if (next.units.length === 0) throw new Error('Even with AI help we could not find a rent and a ZIP per row. Check the file has both.');
+      setRepairable(null);
+      await ingest(next, `${name} · read with AI`, notes.length ? notes : ['AI re-read the file.']);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'The AI fallback failed.');
+    } finally { setBusy(false); }
+  }, [repairable, ingest]);
+
+  const onFile = useCallback(async (file: File) => {
+    setBusy(true); setError(null); setRepairable(null);
     try {
       const parsed = await parseFile(file);
       await ingest(parsed, file.name);
@@ -44,8 +93,15 @@ export default function Tool() {
   }, [ingest]);
 
   const onSample = useCallback(async () => {
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setRepairable(null);
     try { await ingest(parseCsvText(SAMPLE_CSV), 'sample-rent-roll.csv (16 units, 3 buildings)'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not load the sample.'); }
+    finally { setBusy(false); }
+  }, [ingest]);
+
+  const onMessy = useCallback(async () => {
+    setBusy(true); setError(null); setRepairable(null);
+    try { await ingest(parseCsvText(SAMPLE_MESSY_CSV), 'pm-software-export.csv (16 units, no ZIP column)'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not load the sample.'); }
     finally { setBusy(false); }
   }, [ingest]);
@@ -64,10 +120,23 @@ export default function Tool() {
             Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, and the renewal letters — written.
           </p>
           <div className="mt-10">
-            <Dropzone onFile={onFile} onSample={onSample} busy={busy} error={error} />
+            <Dropzone onFile={onFile} onSample={onSample} onMessy={aiAvailable() ? onMessy : undefined} busy={busy} error={error} />
           </div>
-          {roll && roll.issues.length > 0 && (
-            <p className="t-small mt-4 text-center text-ink/60">{roll.issues.length} rows skipped.</p>
+          {repairable && (
+            <div className="paper mx-auto mt-6 max-w-3xl rounded-2xl p-6">
+              <p className="eyebrow text-ink-2">We couldn't read this one on our own</p>
+              <p className="t-body mt-2 text-ink">
+                {repairable.parsed.units.length} of {repairable.parsed.totalRows} rows had a rent and a ZIP we could find.
+                {' '}Columns we recognised: {Object.entries(repairable.parsed.columns).filter(([, v]) => v).map(([k, v]) => `${label(k)} ← "${v}"`).join(', ') || 'none'}.
+              </p>
+              <p className="t-small mt-3 text-ink-2">
+                The AI fallback sends the column headers, six sample rows and any street addresses to the model to work out which column is which and what ZIP each address is in. Inferred ZIPs are marked so you can check them. Tenant names in those six rows are included; nothing else leaves your browser.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button type="button" className="btn-ink" onClick={aiRepair} disabled={busy}>{busy ? 'Reading with AI…' : 'Let AI read the columns'}</button>
+                <button type="button" className="btn-ghost" onClick={() => setRepairable(null)} disabled={busy}>Cancel</button>
+              </div>
+            </div>
           )}
         </section>
       ) : (
@@ -77,12 +146,15 @@ export default function Tool() {
               {roll.issues.length} row{roll.issues.length === 1 ? '' : 's'} skipped: {roll.issues.slice(0, 4).map((i) => `row ${i.row} (${i.message.toLowerCase()})`).join(', ')}{roll.issues.length > 4 ? '…' : ''}
             </p>
           )}
-          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} utilities={utilities} onUtilities={onUtilities} onReset={() => { setRoll(null); setError(null); window.scrollTo({ top: 0 }); }} />
+          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} utilities={utilities} onUtilities={onUtilities} aiNotes={aiNotes} onReset={() => { setRoll(null); setError(null); setAiNotes([]); setRepairable(null); window.scrollTo({ top: 0 }); }} />
         </>
       )}
     </main>
   );
 }
+
+const LABELS: Record<string, string> = { id: 'unit', property: 'property', zip: 'ZIP', bedrooms: 'bedrooms', rent: 'rent', leaseEnd: 'lease end', leaseStart: 'lease start', tenant: 'tenant' };
+const label = (k: string) => LABELS[k] ?? k;
 
 async function loadBoth() {
   // income is optional: the fairness check is skipped if it fails to load

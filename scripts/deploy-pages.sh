@@ -2,7 +2,8 @@
 # Build with the GitHub Pages base path and push dist/ to the gh-pages branch.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BASE_PATH=/leaseleak/ npm run build
+# Pages is static: point the AI UI at the Vercel functions, or hide it if no endpoint is configured.
+BASE_PATH=/leaseleak/ VITE_AI_ENDPOINT="${VITE_AI_ENDPOINT:-off}" npm run build
 mkdir -p dist/app dist/pricing
 cp dist/index.html dist/404.html; cp dist/index.html dist/app/index.html; cp dist/index.html dist/pricing/index.html
 touch dist/.nojekyll

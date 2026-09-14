@@ -71,7 +71,7 @@ export default function Landing() {
               <span className="-mt-[0.08em] block"><span className="t-hero-sans wipe-line">is leaking money.</span></span>
             </h1>
             <p className="t-body mx-auto mt-7 max-w-[44ch] text-ink/75">
-              Drop it in. Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, and the renewal letters — written.
+              Drop it in. Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, the renewal letters — written — and a plan for the month.
             </p>
             <div className="mt-9 flex flex-col items-center gap-4">
               <Link to="/app" className="btn-solid !px-6 !py-3 !text-base">Drop your rent roll <ArrowDR /></Link>
@@ -95,7 +95,7 @@ export default function Landing() {
         <div className="marquee eyebrow text-ink/55">
           {[0, 1].map((k) => (
             <span key={k} className="flex shrink-0 gap-12">
-              {['38,601 ZIP codes', 'HUD Fair Market Rents · FY2027', 'Zillow ZORI · Jul 2026', 'Census ACS · median income', 'Studio to 4+ bedrooms', 'Nothing leaves your browser', 'CSV or Excel', 'Letters in one click'].map((t) => (
+              {['38,601 ZIP codes', 'HUD Fair Market Rents · FY2027', 'Zillow ZORI · Jul 2026', 'Census ACS · median income', 'Studio to 4+ bedrooms', 'Your file never leaves your browser', 'CSV or Excel', 'Letters in one click', 'A plan, written by Gemini, checked by the engine'].map((t) => (
                 <span key={t} className="flex items-center gap-12"><span>{t}</span><span className="h-1 w-1 rounded-full bg-ember" /></span>
               ))}
             </span>
@@ -130,6 +130,49 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ============ 2b · THE PLAN — what the AI does, and what it can't ============ */}
+      <section className="border-t border-ink/10">
+        <div className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-8 md:py-36">
+          <div className="grid gap-10 md:grid-cols-12 md:items-start">
+            <div className="md:col-span-5" data-reveal>
+              <p className="eyebrow text-ink/60">Then the plan</p>
+              <h2 className="t-h2 mt-4"><span className="block"><span className="serif wipe-line font-normal">Numbers are the easy part.</span></span><span className="block"><span className="wipe-line">Knowing what to do isn't.</span></span></h2>
+              <p className="t-body mt-6 max-w-[46ch] text-ink/75">
+                Every dollar on the page is computed here, in your browser, from public data. Then Gemini reads the whole picture — gaps, timing, grades, turnover risk, vouchers, fairness — and writes three things to do this month, in order, with the figures that justify each.
+              </p>
+              <p className="t-body mt-4 max-w-[46ch] text-ink/75">
+                The model computes nothing. It can only cite numbers the engine produced, and each one is checked back before you see it. Ask it a question and it answers the same way.
+              </p>
+              <ul className="t-small mt-6 space-y-2 text-ink/70">
+                <li className="flex gap-3"><span className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-mint-2" />Code decides every number: benchmark, gap, term, letter, grade.</li>
+                <li className="flex gap-3"><span className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-ember" />AI decides what matters most and says it plainly — and reads exports our parser can't.</li>
+                <li className="flex gap-3"><span className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40" />Tenant names never leave your browser. Unit figures are sent only when you click.</li>
+              </ul>
+            </div>
+            <div className="md:col-span-7" data-reveal>
+              <div className="wipe paper rounded-2xl p-6 sm:p-8">
+                <p className="eyebrow text-ink-2">Your plan · sample portfolio</p>
+                <p className="serif mt-2 text-[1.5rem] leading-snug text-ink">Five leases end in the next 90 days and four of them are under benchmark — that's where $29,280 a year starts to come back.</p>
+                <ol className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {[
+                    ['this week', 'Send the October letters', 'Units 3 and A1 end October 15 and 31. At the 6% cap that\'s +$85 and +$105 a month, both still under the HUD benchmark.'],
+                    ['at renewal', 'Skip the $30 bump on A3', 'A move-out there costs about $3,200 and takes 107 months of the increase to recoup. Offer a longer term instead.'],
+                    ['at turnover', 'List Unit 5 voucher-welcome', 'At $1,100 it is $230 a month under the payment standard — $2,760 a year more from a voucher household, paid direct.'],
+                  ].map(([when, title, why]) => (
+                    <li key={title} className="rounded-xl bg-canvas px-4 py-4">
+                      <p className="eyebrow text-ink/55">{when}</p>
+                      <p className="mt-2 font-medium leading-snug">{title}</p>
+                      <p className="t-small mt-2 text-ink-2">{why}</p>
+                    </li>
+                  ))}
+                </ol>
+                <p className="t-micro mt-5 flex items-center gap-2 text-mint"><span aria-hidden="true">✓</span>9 of 9 figures in this memo trace to the engine.<span className="text-ink/45"> Written by Gemini; computed by LeaseLeak.</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ============ 3 · METHOD ============ */}
       <section id="method" className="border-t border-ink/10">
         <div className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-8 md:py-36">
@@ -137,12 +180,13 @@ export default function Landing() {
             <p className="eyebrow text-ink/60">Method</p>
             <h2 className="t-h2 mt-4"><span className="wipe-line">How it</span> <span className="serif wipe-line font-normal">works</span></h2>
           </div>
-          <ol className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4" data-reveal>
+          <ol className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-5" data-reveal>
             {[
               ['Match', 'Each row of your roll is matched to HUD\'s Small Area Fair Market Rent for its ZIP and bedroom count — 38,601 ZIPs, studio to 4+ bedrooms, fiscal year 2027.'],
               ['Measure', 'Benchmark minus rent, per unit, per month. Units above the benchmark count for nothing; units below count twelve times.'],
               ['Time', 'Zillow\'s rent index for your ZIP becomes a 12-month seasonal curve. A lease ending in the trough re-signs at the trough; we quantify it and pick a term that ends at the peak.'],
               ['Write', 'One renewal letter per unit: the new rent (capped, never above the benchmark), the term, the notice language. Download all as a PDF.'],
+              ['Plan', 'Gemini reads every figure the engine produced and writes three things to do this month. It can only cite numbers that exist — each one is checked back against the engine before you see it.'],
             ].map(([h, p], i) => (
               <li key={h}>
                 <span className="btn-circle num !h-9 !w-9 text-[0.8rem] font-medium">0{i + 1}</span>
@@ -160,6 +204,7 @@ export default function Landing() {
               <p>renewal = min(SAFMR<sub>zip,br</sub>, rent × (1 + cap))</p>
               <p>value = Σ gap ÷ cap rate</p>
               <p>voucher<sub>unit</sub> = max(0, SAFMR<sub>zip,br</sub> × standard − rent) × 12</p>
+              <p className="mt-3 text-ink-2">plan = Gemini(brief) · where brief ⊂ engine output, and every figure in plan ∈ brief</p>
             </div>
           </div>
 
@@ -205,7 +250,7 @@ export default function Landing() {
               ['38,601', 'ZIP codes with a HUD benchmark for every bedroom count'],
               ['8,543', 'ZIPs with a Zillow rent index and their own seasonal curve'],
               ['30,618', 'ZIPs with a Census median household income for the fairness check'],
-              ['0 bytes', 'of your rent roll leave the browser. Parsing and matching run locally.'],
+              ['0 names', 'ever leave your browser. Parsing and matching run locally; the advisor sees unit figures, only when you ask.'],
             ].map(([n, t]) => (
               <div key={n}>
                 <p className="t-stat num wipe-up">{n}</p>
@@ -338,7 +383,7 @@ export function Footer() {
         <div className="t-small text-ink/60 md:col-span-4">
           <p className="eyebrow mb-2 text-ink/50">Photographs &amp; type</p>
           <p>Brownstones — <a className="underline underline-offset-4 hover:text-ink" href="https://commons.wikimedia.org/w/index.php?curid=22881303" target="_blank" rel="noreferrer">Beyond My Ken</a>, CC BY-SA 4.0 · Night building — <a className="underline underline-offset-4 hover:text-ink" href="https://commons.wikimedia.org/w/index.php?curid=176811029" target="_blank" rel="noreferrer">OathOn</a>, CC BY-SA 4.0 · Duplex — <a className="underline underline-offset-4 hover:text-ink" href="https://commons.wikimedia.org/w/index.php?curid=69291624" target="_blank" rel="noreferrer">Baltimore Heritage</a>, CC0. All graded.</p>
-          <p className="mt-2">Satoshi by Indian Type Foundry via Fontshare · Instrument Serif by Rodrigo Fuenzalida &amp; Jordan Egstad (OFL). <a className="underline underline-offset-4 hover:text-ink" href="https://github.com/rishikrrontala-bot/leaseleak" target="_blank" rel="noreferrer">Source on GitHub</a>.</p>
+          <p className="mt-2">Advisor: Google Gemini, called through a key-holding proxy with unit figures only — never names. Satoshi by Indian Type Foundry via Fontshare · Instrument Serif by Rodrigo Fuenzalida &amp; Jordan Egstad (OFL). <a className="underline underline-offset-4 hover:text-ink" href="https://github.com/rishikrrontala-bot/leaseleak" target="_blank" rel="noreferrer">Source on GitHub</a>.</p>
         </div>
       </div>
     </footer>

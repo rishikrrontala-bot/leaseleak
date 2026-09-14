@@ -22,3 +22,26 @@ export const SAMPLE_CSV = `Property,Unit,Tenant,Beds,Rent,Lease Start,Lease End,
 export const TEMPLATE_CSV = `Property,Unit,Tenant,Beds,Rent,Lease Start,Lease End,ZIP
 123 Main St,1A,,2,1500,01/01/2026,12/31/2026,00000
 `;
+
+// The same three buildings exported the way property-management software actually
+// exports them: no ZIP column, addresses with city and state, unit types as "2x1",
+// rents with cents, two-digit years, and headers the heuristics don't know.
+// The AI fallback has to map the columns and infer the ZIPs.
+export const SAMPLE_MESSY_CSV = `Bldg / Street,Apt #,Resident,Sq Ft,Type,Mo. Rate,Move-in,Exp.
+"1704 S 5th St, Austin, TX",A1,M. Okafor,910,2x1,"$1,750.00",11/1/25,10/31/26
+"1704 S 5th St, Austin, TX",A2,J. Delgado,910,2x1,"$1,750.00",2/1/26,1/31/27
+"1704 S 5th St, Austin, TX",A3,R. Chen,640,1x1,"$1,700.00",12/1/25,11/30/26
+"1704 S 5th St, Austin, TX",A4,S. Patel,655,1x1,"$1,850.00",7/1/26,6/30/27
+"221 E 11th Ave, Columbus, OH",1,T. Nguyen,600,1x1,"$1,200.00",1/1/26,12/31/26
+"221 E 11th Ave, Columbus, OH",2,A. Brooks,610,1x1,"$1,250.00",3/1/26,2/28/27
+"221 E 11th Ave, Columbus, OH",3,K. Adebayo,880,2x1,"$1,450.00",10/16/25,10/15/26
+"221 E 11th Ave, Columbus, OH",4,L. Romero,900,2x1,"$1,725.00",8/1/26,7/31/27
+"221 E 11th Ave, Columbus, OH",5,D. Fischer,420,Studio,"$1,100.00",4/1/26,3/31/27
+"221 E 11th Ave, Columbus, OH",6,P. Haddad,1150,3x2,"$1,850.00",11/16/25,11/15/26
+"5400 Penn Ave, Pittsburgh, PA",101,E. Kowalski,620,1x1,"$1,300.00",11/2/25,11/1/26
+"5400 Penn Ave, Pittsburgh, PA",102,N. Sato,630,1x1,"$1,495.00",5/1/26,4/30/27
+"5400 Penn Ave, Pittsburgh, PA",201,G. Mensah,890,2x1,"$1,550.00",1/16/26,1/15/27
+"5400 Penn Ave, Pittsburgh, PA",202,V. Ivanova,900,2x1,"$1,650.00",9/1/26,8/31/27
+"5400 Penn Ave, Pittsburgh, PA",301,H. Lindqvist,1200,3x2,"$2,050.00",9/1/26,8/31/27
+"5400 Penn Ave, Pittsburgh, PA",302,B. Marchetti,905,2x1,"$1,825.00",6/1/26,5/31/27
+`;

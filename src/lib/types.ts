@@ -10,6 +10,7 @@ export interface Unit {
   leaseStart?: Date;
   tenant?: string;
   rowIndex: number;
+  zipInferred?: boolean; // ZIP came from the AI address lookup, not the file
 }
 
 export interface ParseIssue {
@@ -22,6 +23,8 @@ export interface ParsedRoll {
   issues: ParseIssue[];
   columns: Record<string, string | null>; // canonical -> source header
   totalRows: number;
+  rows: RawRow[];      // kept so the AI fallback can re-map without re-reading the file
+  headers: string[];
 }
 
 export interface SafmrData {
