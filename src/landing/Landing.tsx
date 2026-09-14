@@ -150,6 +150,8 @@ export default function Landing() {
                 ['Measure', 'Benchmark minus rent, per unit, per month. Units above the benchmark count for nothing; units below count twelve times.'],
                 ['Time', 'Zillow\'s rent index for your ZIP becomes a 12-month seasonal curve. A lease ending in the trough re-signs at the trough; we quantify the difference and pick a term that ends at the peak.'],
                 ['Write', 'One renewal letter per unit: the new rent (capped, never above the benchmark), the term, the notice language. Download all as a PDF.'],
+                ['Value', 'The same gap, priced the way a buyer prices a building: annual rent divided by a cap rate. $29,280 a year is roughly half a million dollars of equity at 6%.'],
+                ['Vouchers', 'HUD\'s benchmark is also the Housing Choice Voucher payment standard. Units below it would earn more from a voucher household — a way to close the gap at turnover without raising rent on anyone.'],
               ].map(([h, p], i) => (
                 <li key={h} className="grid grid-cols-[3rem_1fr] gap-4">
                   <span className="t-h3 num text-ember-3">0{i + 1}</span>
@@ -169,6 +171,8 @@ export default function Landing() {
               <p>gap<sub>unit</sub> = max(0, SAFMR<sub>zip,br</sub> − rent) × 12</p>
               <p>timing<sub>unit</sub> = rent × (idx<sub>peak</sub> ÷ idx<sub>lease end</sub> − 1) × 12</p>
               <p>renewal = min(SAFMR<sub>zip,br</sub>, rent × (1 + cap))</p>
+              <p>value = Σ gap ÷ cap rate</p>
+              <p>voucher<sub>unit</sub> = max(0, SAFMR<sub>zip,br</sub> × standard − rent) × 12</p>
             </div>
           </div>
         </div>
@@ -216,7 +220,7 @@ export default function Landing() {
           <div className="grid gap-6 md:grid-cols-12" data-reveal>
             <h2 className="t-h2 md:col-span-7"><span className="wipe-line">Everything</span><br /><span className="wipe-line">on one page.</span></h2>
             <div className="md:col-span-5 md:self-end">
-              <p className="t-body measure text-paper/75">The headline, the unit-by-unit bars, the seasonal calendar and the letters are one live page — on the sample portfolio or on your own file.</p>
+              <p className="t-body measure text-paper/75">The headline, the equity it represents, the unit-by-unit bars, the seasonal calendar, the voucher option and the letters are one live page — on the sample portfolio or on your own file.</p>
               <Link to="/app" className="link-arrow mt-4">Open the tool <Arrow /></Link>
             </div>
           </div>

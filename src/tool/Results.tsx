@@ -3,6 +3,8 @@ import type { Analysis, UnitResult } from '../lib/types';
 import { fmtUSD, fmtPct, fmtDate, MONTHS, MONTHS_LONG } from '../lib/analyze';
 import { useRevealAll } from '../lib/reveal';
 import Letters from './Letters';
+import Equity from './Equity';
+import Vouchers from './Vouchers';
 
 interface Props {
   analysis: Analysis;
@@ -96,6 +98,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
         <span className="num t-small w-12 font-semibold">{fmtPct(cap, 0)}</span>
         <span className="t-small text-paper/60">Most small landlords keep renewals under 5–8% to hold good tenants. The cap never pushes a unit above its HUD benchmark.</span>
       </div>
+
+      {/* ---- Equity ---- */}
+      <Equity analysis={a} cap={cap} />
 
       {/* ---- Unit bars ---- */}
       <section className="mt-16" aria-labelledby="units">
@@ -201,6 +206,9 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
         </div>
       </section>
 
+      {/* ---- Vouchers ---- */}
+      <Vouchers analysis={a} />
+
       {/* ---- Letters ---- */}
       <Letters analysis={a} />
 
@@ -220,6 +228,12 @@ export default function Results({ analysis: a, fileName, cap, onCap, onReset }: 
           <p>
             Lease timing uses Zillow's Observed Rent Index by ZIP ({a.zoriAsOf}), averaged into a 12-month seasonal profile from 2022–2025 (per ZIP where available, otherwise per metro, otherwise national). A lease that ends in the seasonal trough re-signs at the trough; the timing value is
             <span className="num font-mono text-[0.95em]"> rent × (peak index ÷ index at lease end − 1) × 12</span>.
+          </p>
+          <p>
+            <strong className="text-paper">Equity</strong> prices the gap the way a buyer would: <span className="num font-mono text-[0.95em]">value = annual rent ÷ cap rate</span>. It assumes the recovered rent flows through to net operating income; the cap rate is yours to set.
+          </p>
+          <p>
+            <strong className="text-paper">Vouchers</strong> compare each unit's rent to a Housing Choice Voucher payment standard, <span className="num font-mono text-[0.95em]">FMR × 90–110%</span>, set by the local housing authority. The upside is <span className="num font-mono text-[0.95em]">max(0, standard − rent) × 12</span>, subject to the authority's inspection and rent-reasonableness check.
           </p>
           <p className="t-small text-paper/60">
             Sources: HUD User, FY2027 Small Area FMRs (public domain). Zillow Research, ZORI ZIP-level (free for non-commercial use, attribution required). Letters are drafts, not legal advice — check your state's notice and rent-increase rules.

@@ -97,3 +97,40 @@ export const fmtUSD = (n: number, opts: { cents?: boolean } = {}) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: opts.cents ? 2 : 0, minimumFractionDigits: opts.cents ? 2 : 0 }).format(n);
 export const fmtPct = (n: number, digits = 1) => `${(n * 100).toFixed(digits)}%`;
 export const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+// ---- Equity: what a change in annual income is worth at a cap rate ----
+// Income property is priced on NOI ÷ cap rate, so $1/yr of recovered rent ≈ $1/capRate of value.
+export const valueAtCap = (annualIncome: number, capRate: number) => (capRate > 0 ? annualIncome / capRate : 0);
+
+// ---- Vouchers: HUD FMR is the basis for Housing Choice Voucher payment standards ----
+// A unit renting below the payment standard could earn more from a voucher household,
+// with the housing-authority share paid directly each month.
+export interface VoucherRow {
+  unit: UnitResult;
+  standard: number;        // payment standard = FMR × standardPct
+  upsideMonthly: number;   // max(0, standard − rent)
+  upsideAnnual: number;
+}
+export interface VoucherSummary {
+  rows: VoucherRow[];      // candidates only, largest upside first
+  candidates: number;
+  upsideAnnual: number;
+  strong: number;          // rent < 90% of FMR: beats even the lowest standard a PHA can set
+}
+export function voucherOpportunity(units: UnitResult[], standardPct = 1.0): VoucherSummary {
+  const rows = units
+    .filter((u) => u.fmr !== null)
+    .map((u) => {
+      const standard = Math.round(u.fmr! * standardPct);
+      const upsideMonthly = Math.max(0, standard - u.rent);
+      return { unit: u, standard, upsideMonthly, upsideAnnual: upsideMonthly * 12 };
+    })
+    .filter((r) => r.upsideMonthly > 0)
+    .sort((a, b) => b.upsideAnnual - a.upsideAnnual);
+  return {
+    rows,
+    candidates: rows.length,
+    upsideAnnual: rows.reduce((s, r) => s + r.upsideAnnual, 0),
+    strong: units.filter((u) => u.fmr !== null && u.rent < u.fmr! * 0.9).length,
+  };
+}

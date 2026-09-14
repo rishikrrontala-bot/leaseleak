@@ -10,6 +10,8 @@ Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live
 2. **Measure** — `gap = max(0, SAFMR − rent) × 12`, summed across the portfolio. FMR is the 40th percentile of local gross rents, so the number is a conservative floor.
 3. **Time** — Zillow's ZORI rent index by ZIP (Jul 2026) becomes a 12-month seasonal curve (per ZIP → metro → national fallback). `timing = rent × (idx_peak ÷ idx_lease_end − 1) × 12`. The renewal term (6–18 months) is chosen so the next lease ends at the seasonal peak.
 4. **Write** — one renewal letter per unit: `new rent = min(SAFMR, rent × (1 + cap))`, the term, notice language. Download all as PDF.
+5. **Value** — the gap priced as building equity: `value = Σ gap ÷ cap rate`. On the sample portfolio $29,280/yr is ~$488,000 of value at a 6% cap. Cap rate is adjustable (4–10%).
+6. **Vouchers** — HUD FMR is also the basis for Housing Choice Voucher payment standards. Units below the standard (`FMR × 90–110%`, set per housing authority) would earn `max(0, standard − rent) × 12` more from a voucher household — a way to close the gap at turnover without raising rent on a sitting tenant.
 
 Everything runs in the browser. No upload, no account.
 
