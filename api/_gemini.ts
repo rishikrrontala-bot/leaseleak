@@ -56,11 +56,15 @@ export interface GeminiCall {
 }
 export interface GeminiResult<T> { data: T; model: string; usage: { input: number; output: number } }
 
-/** One JSON-mode call. Tries the configured model, then known fallbacks. */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const RETRY_DELAYS = [1200, 2500, 4000]; // on 429/503 — Gemini's "high demand" is usually seconds long
+
+/** One JSON-mode call. Retries transient errors, then tries the next model. */
 export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
   const key = process.env.GEMINI_API_KEY!;
   let lastErr = '';
   for (const model of MODELS) {
+    for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -76,9 +80,14 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
         },
       }),
     });
-    if (r.status === 404) { lastErr = `model ${model} not found`; continue; }
+    if (r.status === 404) { lastErr = `model ${model} not found`; break; }
     const j = await r.json() as Record<string, unknown>;
-    if (!r.ok) { lastErr = JSON.stringify(j).slice(0, 300); if (r.status === 429 || r.status >= 500) continue; throw new Error(lastErr); }
+    if (!r.ok) {
+      lastErr = JSON.stringify(j).slice(0, 300);
+      if ((r.status === 429 || r.status >= 500) && attempt < RETRY_DELAYS.length) { await sleep(RETRY_DELAYS[attempt]); continue; }
+      if (r.status === 429 || r.status >= 500) break; // give the next model a go
+      throw new Error(lastErr);
+    }
     const cand = (j as { candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[] }).candidates?.[0];
     if (cand?.finishReason === 'MAX_TOKENS') throw new Error('The model ran out of room before finishing — try again');
     const text = cand?.content?.parts?.filter((p) => !p.thought).map((p) => p.text ?? '').join('') ?? '';
@@ -86,8 +95,9 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
     try {
       return { data: JSON.parse(text) as T, model, usage: { input: usage?.promptTokenCount ?? 0, output: usage?.candidatesTokenCount ?? 0 } };
     } catch { throw new Error('Model returned non-JSON output'); }
+    }
   }
-  throw new Error(lastErr || 'No Gemini model available');
+  throw new Error(/UNAVAILABLE|high demand/.test(lastErr) ? 'The model is busy right now — try again in a few seconds' : (lastErr || 'No Gemini model available'));
 }
 
 export function fail(res: VercelResponse, e: unknown) {
