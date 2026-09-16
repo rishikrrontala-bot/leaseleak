@@ -2,7 +2,7 @@
 
 Drop your rent roll. Five seconds later: how much rent you're under the HUD benchmark, which leases end in the wrong month, and the renewal letters — written.
 
-Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live: https://rishikrrontala-bot.github.io/leaseleak/
+Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live: https://leaseleak.vercel.app/ (mirror: https://rishikrrontala-bot.github.io/leaseleak/)
 
 ## What it does
 
@@ -21,6 +21,15 @@ Built solo by Rishik Rontala for **VentureFix 2026** (Venture Build track). Live
 13. **If they leave** — every increase priced with turnover risk: stay = `increase × 12`; leave = `(benchmark − rent) × 12 − (rent × months vacant + make-ready)`; expected gain at an adjustable leave rate, payback months per unit, and the break-even leave rate.
 
 Everything runs in the browser. No upload, no account.
+
+## The AI layer
+
+Every dollar figure on the page is computed in the browser by a deterministic engine from public data. The model does two things code can't:
+
+- **Writes the plan.** `POST /api/plan` sends the engine's full output (unit figures only — tenant names are stripped client-side) to Gemini with a JSON schema and gets back a headline, 3–5 prioritised actions with the units and figures behind each, a "skip" list, and one caution. `POST /api/ask` answers free-text questions the same way. The prompt forbids new numbers; a client-side check (`verify()` in `src/lib/ai.ts`) then extracts every $/%/month figure from the reply and matches it against the engine's numbers, so the UI can say "23 of 24 figures trace to the engine" and flag the one that doesn't.
+- **Reads exports the parser can't.** When the heuristic column detection fails, `POST /api/map` maps headers to the schema from six sample rows. Missing ZIPs are looked up from street addresses with the U.S. Census geocoder (exact, keyless); only addresses it can't match go to the model, and those are marked "?" in the UI.
+
+The key lives in a Vercel function (`api/_gemini.ts`): origin allow-list, per-IP rate limit, 200 KB body cap, retries on 429/503, model `gemini-3.6-flash` with a small thinking budget for the plan and none for the fast paths. The GitHub Pages mirror calls the same functions cross-origin.
 
 ## Run it
 
