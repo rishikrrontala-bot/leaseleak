@@ -30,7 +30,7 @@ export default function Plan({ analysis: a, cap, curve, sampleId = null }: { ana
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const [thread, setThread] = useState<{ q: string; a: AskOut }[]>([]);
+  const [thread, setThread] = useState<{ q: string; a: AskOut; model: string }[]>([]);
   const [asking, setAsking] = useState(false);
 
   // Sample roll → show the pre-generated plan instantly (unless ?live=1).
@@ -61,7 +61,7 @@ export default function Plan({ analysis: a, cap, curve, sampleId = null }: { ana
     setAsking(true); setError(null); setQ('');
     try {
       const r = await askRoll(brief, question, thread.map((t) => ({ q: t.q, a: t.a.answer })));
-      setThread((t) => [...t, { q: question, a: r.data }]); setModel(r.model);
+      setThread((t) => [...t, { q: question, a: r.data, model: r.model }]);
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not reach the advisor.'); }
     finally { setAsking(false); }
   };
@@ -147,7 +147,7 @@ export default function Plan({ analysis: a, cap, curve, sampleId = null }: { ana
                     <p className="t-small font-medium">{t.q}</p>
                     <p className="t-body mt-1 text-ink-2">{t.a.answer}</p>
                     <p className="t-micro mt-1 text-ink/50">
-                      {t.a.confidence}{v.total ? ` · ${v.verified}/${v.total} figures verified` : ''}{v.unverified.length ? ` · unverified: ${v.unverified.slice(0, 3).join(', ')}` : ''}
+                      {t.a.confidence}{v.total ? ` · ${v.verified}/${v.total} figures verified` : ''}{v.unverified.length ? ` · unverified: ${v.unverified.slice(0, 3).join(', ')}` : ''} · {t.model}
                     </p>
                   </li>
                 );

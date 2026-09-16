@@ -25,15 +25,15 @@
  },
  {
   "id": "05",
-  "text": "You can ask it anything. Which increases should I skip? Unit six, where the proposed rent is fifty-four percent of the local median income. And unit A three, where one move-out takes a hundred and seven months to recoup. Five of five figures verified.",
-  "caption": "“Which increases would you skip?” Unit 6: a 54% rent burden. Unit A3: 107 months to recoup a move-out. 5 of 5 figures verified.",
-  "duration": 14.297
+  "text": "You can ask it anything. Which increases should I skip? It names the tenants where a move-out would cost more than the increase is worth, cites the rent burden and the payback on each, and every figure in the answer is verified against the engine.",
+  "caption": "“Which increases would you skip?” It names the tenants where a move-out costs more than the increase is worth — and every figure is verified against the engine.",
+  "duration": 12.335
  },
  {
   "id": "06",
-  "text": "Underneath the plan is the whole audit. Building grades. Unit by unit against the benchmark. Twelve months of cash flow. The seasonal calendar, turnover risk, and the voucher option.",
-  "caption": "Under the plan: building grades, unit by unit, twelve months of cash flow, the seasonal calendar, turnover risk, vouchers.",
-  "duration": 10.353
+  "text": "Below the number sits the whole audit. Building grades. Unit by unit against the benchmark. Twelve months of cash flow. The seasonal calendar, turnover risk, and the voucher option.",
+  "caption": "Below the number: building grades, unit by unit, twelve months of cash flow, the seasonal calendar, turnover risk, vouchers.",
+  "duration": 10.362
  },
  {
   "id": "07",

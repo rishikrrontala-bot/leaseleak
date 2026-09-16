@@ -177,13 +177,25 @@ async function ensureVisible(page, selector, label) {
     await moveTo(page, 'text=Rent left on the table', { fx: 0.5, fy: 5.5, steps: 16 });
     await sleep(page, d - 6800);
 
+    // ---------- 06 · tour the audit while the plan generates ----------
+    d = await narrate(page, '06');
+    const step = d / 5;
+    for (const sel of ['h3:has-text("Building by building")', 'h3:has-text("Unit by unit")', 'h3:has-text("The next twelve months")', 'h3:has-text("If they leave")', 'h3:has-text("The voucher option")']) {
+      await smoothScrollTo(page, sel, -110, 800);
+      await moveTo(page, sel, { fx: 0.2, fy: 2.6, steps: 10 });
+      await sleep(page, step - 900);
+    }
+
     // ---------- 03 · the plan ----------
     await page.waitForSelector('button:has-text("Rewrite")', { timeout: 90000 });
+    // fire the question now so the answer is ready two beats from here
+    await page.locator('button:has-text("Which increases would you skip")').first().dispatchEvent('click');
+    console.log(`ask requested @ ${now().toFixed(2)}s`);
     await smoothScrollTo(page, '#plan', -150, 1200);
     d = await narrate(page, '03');
     await moveTo(page, '#plan', { fx: 0.3, fy: 1.2, steps: 18 });
     await sleep(page, 2400);
-    const cards = page.locator('#plan ~ ol li, section[aria-labelledby="plan"] ol > li');
+    const cards = page.locator('section[aria-labelledby="plan"] ol > li');
     for (let i = 0; i < Math.min(3, await cards.count()); i++) { await moveTo(page, cards.nth(i), { fx: 0.5, fy: 0.35, steps: 14 }); await sleep(page, 1700); }
     await sleep(page, d - 2400 - 3 * 1900);
 
@@ -196,23 +208,11 @@ async function ensureVisible(page, selector, label) {
 
     // ---------- 05 · ask ----------
     d = await narrate(page, '05');
-    const chip = page.locator('button:has-text("Which increases would you skip")').first();
-    await smoothScrollTo(page, chip, -520, 900);
-    await moveAndClick(page, chip, 'ask chip', { post: 300 });
     await waitForAnswer(page);
     const answer = page.locator('section[aria-labelledby="plan"] ol li p.t-body').last();
-    await smoothScrollTo(page, answer, -260, 900);
+    await smoothScrollTo(page, answer, -300, 900);
     await moveTo(page, answer, { fx: 0.25, fy: 0.4, steps: 18 });
-    await sleep(page, d - 3800);
-
-    // ---------- 06 · the rest of the audit, quickly ----------
-    d = await narrate(page, '06');
-    const step = d / 5;
-    for (const sel of ['h3:has-text("Building by building")', 'h3:has-text("Unit by unit")', 'h3:has-text("The next twelve months")', 'h3:has-text("If they leave")', 'h3:has-text("The voucher option")']) {
-      await smoothScrollTo(page, sel, -110, 800);
-      await moveTo(page, sel, { fx: 0.2, fy: 2.6, steps: 10 });
-      await sleep(page, step - 900);
-    }
+    await sleep(page, d - 1200);
 
     // ---------- 07 · letters ----------
     await smoothScrollTo(page, 'h3:has-text("Renewal letters, written")', -110);
