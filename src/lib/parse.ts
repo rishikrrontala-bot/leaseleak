@@ -95,7 +95,8 @@ export function parseZip(v: unknown): string | null {
 
 export interface ParseOverrides {
   columns?: Record<string, string | null>;   // AI column mapping: fills gaps the heuristics left
-  zipByRow?: Record<number, string>;         // AI-inferred ZIPs keyed by row number
+  zipByRow?: Record<number, string>;         // looked-up ZIPs keyed by row number
+  zipInferredRows?: Set<number>;             // which of those came from the model rather than the geocoder
 }
 
 export function rowsToUnits(rows: RawRow[], headers: string[], overrides: ParseOverrides = {}): ParsedRoll {
@@ -114,7 +115,7 @@ export function rowsToUnits(rows: RawRow[], headers: string[], overrides: ParseO
     let zip = parseZip(get(r, 'zip'));
     if (!zip && columns.property) zip = parseZip(get(r, 'property'));
     let zipInferred = false;
-    if (!zip && overrides.zipByRow?.[rowNum]) { zip = overrides.zipByRow[rowNum]; zipInferred = true; }
+    if (!zip && overrides.zipByRow?.[rowNum]) { zip = overrides.zipByRow[rowNum]; zipInferred = overrides.zipInferredRows?.has(rowNum) ?? false; }
     const bedrooms = parseBedrooms(get(r, 'bedrooms'));
     if (rent === null) { issues.push({ row: rowNum, message: 'No rent found' }); return; }
     if (!zip) { issues.push({ row: rowNum, message: 'No 5-digit ZIP found' }); return; }

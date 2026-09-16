@@ -11,3 +11,5 @@ demo/out
 .env
 .env.*
 .vercel/
+.vercel
+.env*

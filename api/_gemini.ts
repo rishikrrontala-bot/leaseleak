@@ -2,7 +2,7 @@
 // body limits, and one call helper that enforces JSON output against a schema.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const MODELS = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat(['gemini-2.5-flash', 'gemini-2.0-flash']);
+const MODELS = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat(['gemini-3.6-flash']);
 const MAX_BODY = 200_000;          // bytes — a 200-unit brief is ~60 KB
 const WINDOW_MS = 10 * 60_000;     // rate limit window
 const MAX_PER_WINDOW = 30;         // per IP per window (best-effort; instances are ephemeral)
@@ -52,6 +52,7 @@ export interface GeminiCall {
   schema: Record<string, unknown>;   // JSON schema the model must satisfy
   temperature?: number;
   maxOutputTokens?: number;
+  thinking?: number;   // thinking-token budget; 0 = answer directly (fast). Thinking counts against maxOutputTokens.
 }
 export interface GeminiResult<T> { data: T; model: string; usage: { input: number; output: number } }
 
@@ -70,14 +71,17 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
           responseMimeType: 'application/json',
           responseSchema: call.schema,
           temperature: call.temperature ?? 0.3,
-          maxOutputTokens: call.maxOutputTokens ?? 2048,
+          maxOutputTokens: (call.maxOutputTokens ?? 2048) + (call.thinking ?? 0),
+          thinkingConfig: { thinkingBudget: call.thinking ?? 0 },
         },
       }),
     });
     if (r.status === 404) { lastErr = `model ${model} not found`; continue; }
     const j = await r.json() as Record<string, unknown>;
     if (!r.ok) { lastErr = JSON.stringify(j).slice(0, 300); if (r.status === 429 || r.status >= 500) continue; throw new Error(lastErr); }
-    const text = (j as { candidates?: { content?: { parts?: { text?: string }[] } }[] }).candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+    const cand = (j as { candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[] }).candidates?.[0];
+    if (cand?.finishReason === 'MAX_TOKENS') throw new Error('The model ran out of room before finishing — try again');
+    const text = cand?.content?.parts?.filter((p) => !p.thought).map((p) => p.text ?? '').join('') ?? '';
     const usage = (j as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
     try {
       return { data: JSON.parse(text) as T, model, usage: { input: usage?.promptTokenCount ?? 0, output: usage?.candidatesTokenCount ?? 0 } };

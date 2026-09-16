@@ -66,12 +66,15 @@ export default function Tool() {
         const addresses = Array.from(new Set(missing.map((i) => addrByRow.get(i.row)).filter(Boolean) as string[]));
         if (addresses.length) {
           const z = await inferZips(addresses);
-          const zipFor = new Map(z.data.results.filter((r) => r.zip && r.confidence !== 'low').map((r) => [r.address, r.zip!]));
-          const zipByRow: Record<number, string> = {};
-          for (const i of missing) { const a = addrByRow.get(i.row); if (a && zipFor.has(a)) zipByRow[i.row] = zipFor.get(a)!; }
-          const n = Object.keys(zipByRow).length;
-          if (n) notes.push(`AI inferred ${n} ZIP${n === 1 ? '' : 's'} from street addresses — marked “?” below; verify before you send anything.`);
-          next = rowsToUnits(parsed.rows, parsed.headers, { columns: m.data, zipByRow });
+          const rows = z.data.results.filter((r) => r.zip && r.confidence !== 'low');
+          const zipFor = new Map(rows.map((r) => [r.address, r.zip!]));
+          const fromModel = new Set(rows.filter((r) => r.source === 'model').map((r) => r.address));
+          const zipByRow: Record<number, string> = {}; const zipInferredRows = new Set<number>();
+          for (const i of missing) { const a = addrByRow.get(i.row); if (a && zipFor.has(a)) { zipByRow[i.row] = zipFor.get(a)!; if (fromModel.has(a)) zipInferredRows.add(i.row); } }
+          const geo = Object.keys(zipByRow).length - zipInferredRows.size;
+          if (geo) notes.push(`${geo} ZIP${geo === 1 ? '' : 's'} looked up from street addresses with the U.S. Census geocoder.`);
+          if (zipInferredRows.size) notes.push(`${zipInferredRows.size} ZIP${zipInferredRows.size === 1 ? '' : 's'} the geocoder couldn't match were inferred by AI — marked “?” below; verify before you send anything.`);
+          next = rowsToUnits(parsed.rows, parsed.headers, { columns: m.data, zipByRow, zipInferredRows });
         }
       }
       if (next.units.length === 0) throw new Error('Even with AI help we could not find a rent and a ZIP per row. Check the file has both.');
@@ -130,7 +133,7 @@ export default function Tool() {
                 {' '}Columns we recognised: {Object.entries(repairable.parsed.columns).filter(([, v]) => v).map(([k, v]) => `${label(k)} ← "${v}"`).join(', ') || 'none'}.
               </p>
               <p className="t-small mt-3 text-ink-2">
-                The AI fallback sends the column headers, six sample rows and any street addresses to the model to work out which column is which and what ZIP each address is in. Inferred ZIPs are marked so you can check them. Tenant names in those six rows are included; nothing else leaves your browser.
+                The fallback sends the column headers and six sample rows to the model to work out which column is which. Missing ZIPs are looked up from street addresses with the U.S. Census geocoder; only addresses it can't match go to the model, and those are marked so you can check them. Tenant names in those six rows are included; nothing else leaves your browser.
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <button type="button" className="btn-ink" onClick={aiRepair} disabled={busy}>{busy ? 'Reading with AI…' : 'Let AI read the columns'}</button>

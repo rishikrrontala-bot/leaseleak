@@ -70,14 +70,14 @@ async function post<T>(path: string, body: unknown): Promise<AiResult<T>> {
 export const fetchPlan = (brief: Brief) => post<PlanOut>('/plan', { brief });
 export const askRoll = (brief: Brief, question: string, history: { q: string; a: string }[]) => post<AskOut>('/ask', { brief, question, history });
 export const mapColumns = (headers: string[], sample: Record<string, unknown>[]) => post<Record<string, string | null>>('/map', { headers, sample });
-export const inferZips = (addresses: string[]) => post<{ results: { address: string; zip: string | null; confidence: 'high' | 'medium' | 'low' }[] }>('/map', { addresses });
+export const inferZips = (addresses: string[]) => post<{ results: { address: string; zip: string | null; confidence: 'high' | 'medium' | 'low'; source: 'census' | 'model' }[]; geocoded: number; inferred: number }>('/map', { addresses });
 
 /** Is AI wired up on this deployment? (Pages builds without an endpoint get no AI UI.) */
 export const aiAvailable = () => ENDPOINT !== '' && ENDPOINT !== 'off';
 
 // ---- Grounding check: does every figure in the model's text exist in the brief? ----
 function collectNumbers(x: unknown, out: Set<number>) {
-  if (typeof x === 'number' && Number.isFinite(x)) { out.add(Math.round(x)); out.add(Math.round(x * 10) / 10); }
+  if (typeof x === 'number' && Number.isFinite(x)) { out.add(Math.round(x)); out.add(Math.abs(Math.round(x))); out.add(Math.round(x * 10) / 10); out.add(Math.abs(Math.round(x * 10) / 10)); }
   else if (Array.isArray(x)) x.forEach((v) => collectNumbers(v, out));
   else if (x && typeof x === 'object') Object.values(x).forEach((v) => collectNumbers(v, out));
 }

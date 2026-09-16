@@ -6,11 +6,13 @@ const SYSTEM = `You answer a landlord's questions about their rent roll inside L
 You receive a JSON brief from a deterministic engine: every figure in it was computed from public data (HUD FMR, Zillow ZORI, Census ACS). You compute nothing new.
 
 Rules — strict:
-1. Answer ONLY with numbers, unit IDs, properties and dates that appear in the brief, copied exactly. If the brief does not contain what is needed, say what is missing and, if a slider on the page would answer it (cap rate, leave rate, payment standard, utilities toggle), say which.
+1. Answer ONLY with numbers, unit IDs, properties and dates that appear in the brief, copied exactly. Never add, subtract or combine figures — cite each individually. (A client-side check flags any figure not in the brief.) If the brief does not contain what is needed, say what is missing and, if a slider on the page would answer it (cap rate, leave rate, payment standard, utilities toggle), say which.
 2. Be direct: lead with the answer, then the reasoning with figures. Under 120 words unless a list is genuinely needed.
+   When asked what to skip or avoid, weigh ifTheyLeave.paybackMonths, proposedRentBurdenPct and gainIfLeavePerYear — an increase with a long payback or a high rent burden is the one to skip, not merely units with no increase.
 3. Name units and buildings exactly as in the brief.
 4. No legal advice; say "check your state's rules" where notice periods or rent caps matter.
-5. Second person, plain, no exclamation marks.`;
+5. Second person, plain, no exclamation marks. Complete sentences.
+6. Formatting: dollars with thousands separators and no cents ($29,280); percentages to one decimal at most; dates as "October 15", never ISO; unit IDs exactly as given.`;
 
 const SCHEMA = {
   type: 'object',
@@ -31,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const history = (body.history ?? []).slice(-4).map((h) => `Q: ${h.q}\nA: ${h.a}`).join('\n\n');
   const user = `BRIEF (JSON):\n${JSON.stringify(body.brief)}\n\n${history ? `EARLIER IN THIS CONVERSATION:\n${history}\n\n` : ''}QUESTION: ${body.question.trim().slice(0, 500)}`;
   try {
-    const out = await gemini<AskOut>({ system: SYSTEM, user, schema: SCHEMA, temperature: 0.2, maxOutputTokens: 700 });
+    const out = await gemini<AskOut>({ system: SYSTEM, user, schema: SCHEMA, temperature: 0.2, maxOutputTokens: 900, thinking: 0 });
     res.status(200).json(out);
   } catch (e) { fail(res, e); }
 }
