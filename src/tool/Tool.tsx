@@ -17,6 +17,7 @@ export default function Tool() {
   const [cap, setCap] = useState(0.06);
   const [utilities, setUtilities] = useState<Record<string, boolean>>({});
   const [aiNotes, setAiNotes] = useState<string[]>([]);
+  const [sampleId, setSampleId] = useState<string | null>(null); // which built-in sample is loaded, if any
   // a roll the heuristics couldn't read, held so the AI fallback can try
   const [repairable, setRepairable] = useState<{ parsed: ParsedRoll; name: string } | null>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof loadBoth>> | null>(null);
@@ -86,7 +87,7 @@ export default function Tool() {
   }, [repairable, ingest]);
 
   const onFile = useCallback(async (file: File) => {
-    setBusy(true); setError(null); setRepairable(null);
+    setBusy(true); setError(null); setRepairable(null); setSampleId(null);
     try {
       const parsed = await parseFile(file);
       await ingest(parsed, file.name);
@@ -96,14 +97,14 @@ export default function Tool() {
   }, [ingest]);
 
   const onSample = useCallback(async () => {
-    setBusy(true); setError(null); setRepairable(null);
+    setBusy(true); setError(null); setRepairable(null); setSampleId('clean');
     try { await ingest(parseCsvText(SAMPLE_CSV), 'sample-rent-roll.csv (16 units, 3 buildings)'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not load the sample.'); }
     finally { setBusy(false); }
   }, [ingest]);
 
   const onMessy = useCallback(async () => {
-    setBusy(true); setError(null); setRepairable(null);
+    setBusy(true); setError(null); setRepairable(null); setSampleId('messy');
     try { await ingest(parseCsvText(SAMPLE_MESSY_CSV), 'pm-software-export.csv (16 units, no ZIP column)'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not load the sample.'); }
     finally { setBusy(false); }
@@ -149,7 +150,7 @@ export default function Tool() {
               {roll.issues.length} row{roll.issues.length === 1 ? '' : 's'} skipped: {roll.issues.slice(0, 4).map((i) => `row ${i.row} (${i.message.toLowerCase()})`).join(', ')}{roll.issues.length > 4 ? '…' : ''}
             </p>
           )}
-          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} utilities={utilities} onUtilities={onUtilities} aiNotes={aiNotes} onReset={() => { setRoll(null); setError(null); setAiNotes([]); setRepairable(null); window.scrollTo({ top: 0 }); }} />
+          <Results analysis={analysis} fileName={fileName} cap={cap} onCap={setCap} utilities={utilities} onUtilities={onUtilities} aiNotes={aiNotes} sampleId={sampleId} onReset={() => { setRoll(null); setError(null); setAiNotes([]); setRepairable(null); setSampleId(null); window.scrollTo({ top: 0 }); }} />
         </>
       )}
     </main>

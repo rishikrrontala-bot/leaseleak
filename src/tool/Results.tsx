@@ -20,12 +20,13 @@ interface Props {
   utilities: Record<string, boolean>;
   onUtilities: (property: string, paid: boolean) => void;
   aiNotes?: string[];
+  sampleId?: string | null;
   onReset: () => void;
 }
 
 const money = (n: number) => fmtUSD(Math.round(n));
 
-export default function Results({ analysis: a, fileName, cap, onCap, utilities, onUtilities, aiNotes = [], onReset }: Props) {
+export default function Results({ analysis: a, fileName, cap, onCap, utilities, onUtilities, aiNotes = [], sampleId = null, onReset }: Props) {
   const root = useRevealAll<HTMLDivElement>();
   const [view, setView] = useState<'gap' | 'timing'>('gap');
 
@@ -114,7 +115,7 @@ export default function Results({ analysis: a, fileName, cap, onCap, utilities, 
       </div>
 
       {/* ---- The advisor: AI reads the engine's numbers, writes the plan ---- */}
-      <Plan analysis={a} cap={cap} curve={curve} />
+      <Plan key={fileName} analysis={a} cap={cap} curve={curve} sampleId={sampleId} />
 
       {/* ---- Equity ---- */}
       <Equity analysis={a} cap={cap} />

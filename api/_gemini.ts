@@ -2,7 +2,11 @@
 // body limits, and one call helper that enforces JSON output against a schema.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const MODELS = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat(['gemini-3.6-flash']);
+// Free-tier quota is 20 requests/day *per model*, so the chain is also the budget:
+// a daily-quota 429 moves straight to the next model; a 503 retries first.
+const MODELS = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
+  'gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3-flash-preview',
+]);
 const MAX_BODY = 200_000;          // bytes — a 200-unit brief is ~60 KB
 const WINDOW_MS = 10 * 60_000;     // rate limit window
 const MAX_PER_WINDOW = 30;         // per IP per window (best-effort; instances are ephemeral)
@@ -83,7 +87,9 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
     if (r.status === 404) { lastErr = `model ${model} not found`; break; }
     const j = await r.json() as Record<string, unknown>;
     if (!r.ok) {
-      lastErr = JSON.stringify(j).slice(0, 300);
+      lastErr = JSON.stringify(j).slice(0, 400);
+      const dailyQuota = r.status === 429 && /PerDay|RESOURCE_EXHAUSTED/.test(lastErr);
+      if (dailyQuota) break; // today's free budget for this model is spent — next model, no retry
       if ((r.status === 429 || r.status >= 500) && attempt < RETRY_DELAYS.length) { await sleep(RETRY_DELAYS[attempt]); continue; }
       if (r.status === 429 || r.status >= 500) break; // give the next model a go
       throw new Error(lastErr);
@@ -97,6 +103,7 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
     } catch { throw new Error('Model returned non-JSON output'); }
     }
   }
+  if (/PerDay|RESOURCE_EXHAUSTED/.test(lastErr)) throw new Error("Today's free-tier budget for the advisor is used up on every model — it resets at midnight Pacific. The rest of the page is unaffected.");
   throw new Error(/UNAVAILABLE|high demand/.test(lastErr) ? 'The model is busy right now — try again in a few seconds' : (lastErr || 'No Gemini model available'));
 }
 

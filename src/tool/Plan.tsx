@@ -1,7 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Analysis } from '../lib/types';
 import { aiAvailable, askRoll, buildBrief, fetchPlan, verify, type AskOut, type PlanOut } from '../lib/ai';
+import { asset } from '../lib/router';
 import { ArrowDR } from '../ui/Icons';
+
+// Plans for the two built-in sample rolls were generated once by the live model and
+// shipped as data, so the demo never depends on that day's API quota. Anything you
+// upload is always live, and ?live=1 forces the samples live too.
+interface CachedPlan { plan: PlanOut; model: string; generatedOn: string }
+const liveOnly = () => new URLSearchParams(window.location.search).has('live');
 
 const SUGGESTED = [
   'Which increases would you skip, and why?',
@@ -15,15 +22,28 @@ const SUGGESTED = [
 // model reads them and writes the plan. Nothing is sent until you ask, and
 // tenant names never leave the browser. Every figure in the reply is checked
 // back against the engine's numbers before it's shown.
-export default function Plan({ analysis: a, cap, curve }: { analysis: Analysis; cap: number; curve: number[] }) {
+export default function Plan({ analysis: a, cap, curve, sampleId = null }: { analysis: Analysis; cap: number; curve: number[]; sampleId?: string | null }) {
   const brief = useMemo(() => buildBrief(a, cap, curve), [a, cap, curve]);
   const [plan, setPlan] = useState<PlanOut | null>(null);
   const [model, setModel] = useState<string>('');
+  const [cachedOn, setCachedOn] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [thread, setThread] = useState<{ q: string; a: AskOut }[]>([]);
   const [asking, setAsking] = useState(false);
+
+  // Sample roll → show the pre-generated plan instantly (unless ?live=1).
+  // The component is keyed on the file in Results, so state resets per roll on its own.
+  useEffect(() => {
+    if (!sampleId || liveOnly() || !aiAvailable()) return;
+    let cancelled = false;
+    fetch(asset('/data/sample-plans.json')).then((r) => (r.ok ? r.json() : null)).then((j: Record<string, CachedPlan> | null) => {
+      const c = j?.[sampleId];
+      if (c && !cancelled) { setPlan(c.plan); setModel(c.model); setCachedOn(c.generatedOn); }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [sampleId]);
 
   if (!aiAvailable()) return null;
 
@@ -32,7 +52,7 @@ export default function Plan({ analysis: a, cap, curve }: { analysis: Analysis; 
 
   const writePlan = async () => {
     setBusy(true); setError(null);
-    try { const r = await fetchPlan(brief); setPlan(r.data); setModel(r.model); }
+    try { const r = await fetchPlan(brief); setPlan(r.data); setModel(r.model); setCachedOn(null); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not reach the advisor.'); }
     finally { setBusy(false); }
   };
@@ -73,7 +93,7 @@ export default function Plan({ analysis: a, cap, curve }: { analysis: Analysis; 
                 <p className="eyebrow text-ink-2">Your plan</p>
                 <h3 id="plan" className="serif mt-2 text-[1.6rem] leading-snug text-ink sm:text-[1.9rem]">{plan.headline}</h3>
               </div>
-              <button type="button" className="btn-ghost !py-2 !text-[0.85rem]" onClick={writePlan} disabled={busy}>{busy ? 'Rewriting…' : 'Rewrite'}</button>
+              <button type="button" className="btn-ghost !py-2 !text-[0.85rem]" onClick={writePlan} disabled={busy}>{busy ? 'Rewriting…' : cachedOn ? 'Rewrite live' : 'Rewrite'}</button>
             </div>
 
             <ol className="mt-8 grid gap-4 md:grid-cols-3">
@@ -110,7 +130,7 @@ export default function Plan({ analysis: a, cap, curve }: { analysis: Analysis; 
                 <span aria-hidden="true">{check.unverified.length ? '△' : '✓'}</span>
                 {check.verified} of {check.total} figures in this memo trace to the engine
                 {check.unverified.length ? ` — could not verify: ${check.unverified.slice(0, 4).join(', ')}` : ''}.
-                <span className="text-ink/45"> Written by {model || 'Gemini'}; computed by LeaseLeak.</span>
+                <span className="text-ink/45"> Written by {model || 'Gemini'}{cachedOn ? ` on ${cachedOn} for this sample roll — press Rewrite live for a fresh one` : ''}; computed by LeaseLeak.</span>
               </p>
             )}
           </>
