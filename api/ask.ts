@@ -1,6 +1,6 @@
 // POST /api/ask  { brief, question, history? }  →  an answer grounded in the engine's numbers.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { guard, gemini, fail } from './_gemini';
+import { guard, gemini, fail } from './_gemini.js';
 
 const SYSTEM = `You answer a landlord's questions about their rent roll inside LeaseLeak.
 You receive a JSON brief from a deterministic engine: every figure in it was computed from public data (HUD FMR, Zillow ZORI, Census ACS). You compute nothing new.

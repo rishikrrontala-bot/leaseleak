@@ -4,7 +4,7 @@
 // ZIPs come from the Census Bureau geocoder first (exact, keyless); the model only
 // answers for addresses the geocoder cannot match, and those are flagged as inferred.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { guard, gemini, fail } from './_gemini';
+import { guard, gemini, fail } from './_gemini.js';
 
 const CANON = ['id', 'property', 'zip', 'bedrooms', 'rent', 'leaseEnd', 'leaseStart', 'tenant'] as const;
 

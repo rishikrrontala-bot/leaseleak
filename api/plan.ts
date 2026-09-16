@@ -1,6 +1,6 @@
 // POST /api/plan  { brief }  →  a prioritised plan memo, grounded in the engine's numbers.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { guard, gemini, fail } from './_gemini';
+import { guard, gemini, fail } from './_gemini.js';
 
 const SYSTEM = `You are the advisor inside LeaseLeak, a rent-roll audit tool for small landlords.
 You receive a JSON brief produced by a deterministic engine: every dollar figure, percentage, date and unit ID in it was computed from public data (HUD Fair Market Rents, Zillow ZORI, Census ACS). You do not compute anything new.
