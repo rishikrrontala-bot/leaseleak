@@ -79,6 +79,7 @@ const RETRY_DELAYS = [800, 1600]; // on 503 — one quick retry pair, then fail 
 export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
   const key = process.env.GEMINI_API_KEY!;
   let lastErr = '';
+  let outBudget = call.maxOutputTokens ?? 2048; // doubled once if the model runs out of room
   for (const model of MODELS) {
     if (isExhausted(model)) continue;
     for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
@@ -92,7 +93,7 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
           responseMimeType: 'application/json',
           responseSchema: call.schema,
           temperature: call.temperature ?? 0.3,
-          maxOutputTokens: (call.maxOutputTokens ?? 2048) + (call.thinking ?? 0),
+          maxOutputTokens: outBudget + (call.thinking ?? 0),
           thinkingConfig: { thinkingBudget: call.thinking ?? 0 },
         },
       }),
@@ -108,7 +109,11 @@ export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
       throw new Error(lastErr);
     }
     const cand = (j as { candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[] }).candidates?.[0];
-    if (cand?.finishReason === 'MAX_TOKENS') throw new Error('The model ran out of room before finishing — try again');
+    if (cand?.finishReason === 'MAX_TOKENS') {
+      lastErr = 'The model ran out of room before finishing';
+      if (outBudget < (call.maxOutputTokens ?? 2048) * 4) { outBudget *= 2; continue; } // same model, more room
+      break; // next model
+    }
     const text = cand?.content?.parts?.filter((p) => !p.thought).map((p) => p.text ?? '').join('') ?? '';
     const usage = (j as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
     try {

@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!body) return;
   if (!body.brief) return res.status(400).json({ error: 'brief required' });
   try {
-    const out = await gemini<PlanOut>({ system: SYSTEM, user: `BRIEF (JSON):\n${JSON.stringify(body.brief)}`, schema: SCHEMA, temperature: 0.25, maxOutputTokens: 2500, thinking: 768 });
+    const out = await gemini<PlanOut>({ system: SYSTEM, user: `BRIEF (JSON):\n${JSON.stringify(body.brief)}`, schema: SCHEMA, temperature: 0.25, maxOutputTokens: 3000, thinking: 512 });
     res.status(200).json(out);
   } catch (e) { fail(res, e); }
 }
