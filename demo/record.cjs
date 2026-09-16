@@ -119,7 +119,7 @@ async function ensureVisible(page, selector, label) {
   t0 = Date.now();
 
   try {
-    await page.goto(`${BASE_URL}/app`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/app?live=1`, { waitUntil: 'networkidle' });
     await injectOverlays(page);
 
     if (REHEARSAL) {

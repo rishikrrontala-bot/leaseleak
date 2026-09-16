@@ -1,0 +1,88 @@
+{
+ "clean": {
+  "plan": {
+   "headline": "Across your 16 units, 12 sit below benchmark rents, leaving $29,280 in annual gap that could add $488,000 in equity at a 6% capitalization rate.",
+   "actions": [
+    {
+     "title": "Address expiring lease renewal for unit 3",
+     "why": "The lease ends on October 15, 2026 with only 29 days remaining. Current rent of $1,450 sits 14.2% below the HUD benchmark of $1,690. Proposing $1,535 brings a gain if they stay of $1,020 per year, whereas turnover leads to a gain if they leave of -$70 per year.",
+     "units": [
+      "3"
+     ],
+     "when": "this week"
+    },
+    {
+     "title": "Issue renewal offer for unit A1",
+     "why": "The lease expires on October 31, 2026 with 45 days remaining. Current rent is $1,750 against a benchmark of $2,050, showing an annual gap of $3,600. Proposing $1,855 yields a gain if they stay of $1,260 per year with a proposed rent burden of 22.9%.",
+     "units": [
+      "A1"
+     ],
+     "when": "this month"
+    },
+    {
+     "title": "Prioritize vouchers at turnover in 221 E 11th Ave",
+     "why": "This building has 5 units under benchmark and accounts for $12,240 of your annual gap. Across the portfolio, 9 units are strong candidates for housing vouchers where you have an upside of $29,280 per year. For example, unit 5 has an annual gap of $2,760 below benchmark.",
+     "units": [
+      "221 E 11th Ave (Columbus OH)"
+     ],
+     "when": "at turnover"
+    },
+    {
+     "title": "Shift renewal end dates toward the seasonal peak",
+     "why": "Aligning your lease ends with peak months captures $6,581 per year in timing value across your portfolio. Unit A3 ends November 30, 2026, but shifting its cycle to July yields a timing value of $887 per year. Check your state's rules when adjusting lease terms.",
+     "units": [
+      "A3"
+     ],
+     "when": "at renewal"
+    }
+   ],
+   "skip": [
+    "Do not push unit A3 to market rent upon departure, because the gain if they leave is -$2,840 per year and requires a payback of 107 months.",
+    "Do not aggressively risk turnover in unit 6, where tenant rent burden reaches 54.1% and the gain if they leave is -$1,430 per year."
+   ],
+   "caution": "These projections assume you can capture capped increases of $12,540 per year without exceeding the break-even departure rate of 63.1%."
+  },
+  "model": "gemini-3.8-flash",
+  "generatedOn": "September 15, 2026",
+  "verified": "26/26"
+ },
+ "messy": {
+  "plan": {
+   "headline": "Your portfolio has an annual rent gap of $29,280 across 12 units currently priced below benchmark.",
+   "actions": [
+    {
+     "title": "Offer renewal to Unit 3 with a proposed rent increase",
+     "why": "Unit 3 has a lease ending October 15, 2026, with an annual gap of $2,880. Proposing a rent of $1,535 increases monthly income by $85, but the rent burden is high at 42.4%. If they leave, you face a gain of -$70, so check your state's rules before issuing notice.",
+     "units": [
+      "3"
+     ],
+     "when": "this week"
+    },
+    {
+     "title": "Renew Unit A1 and align lease end to summer",
+     "why": "Unit A1 has a lease ending October 31, 2026, with an annual gap of $3,600. Proposing a rent of $1,855 yields a gain if they stay of $1,260, and aligning the next lease to end in July captures a timing value of $746.",
+     "units": [
+      "A1"
+     ],
+     "when": "this week"
+    },
+    {
+     "title": "Target Columbus building for voucher transition",
+     "why": "The building at 221 E 11th Ave (Columbus OH) has 5 units under benchmark with an annual gap of $12,240. Transitioning units like Unit 5, which has a voucher upside of $2,760, to voucher tenants at turnover can safely capture this gap.",
+     "units": [
+      "221 E 11th Ave (Columbus OH)"
+     ],
+     "when": "at turnover"
+    }
+   ],
+   "skip": [
+    "Do not raise rent on Unit A3, as the payback period is 107 months and you face a gain if they leave of -$2,840.",
+    "Do not push for a vacancy in Unit 6 where the rent burden is 54.1%, because if they leave, your gain is -$1,430."
+   ],
+   "caution": "These projections assume you can recover $12,540 under the cap rate of 6% to achieve the estimated equity of $488,000."
+  },
+  "model": "gemini-3.5-flash",
+  "generatedOn": "September 15, 2026",
+  "verified": "19/19"
+ }
+}
