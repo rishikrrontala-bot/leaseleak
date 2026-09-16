@@ -164,8 +164,7 @@ async function ensureVisible(page, selector, label) {
     await page.waitForSelector('text=Rent left on the table');
     await moveTo(page, 'text=Rent left on the table', { fx: 0.12, fy: 3.4, steps: 22 });
     // fire the AI request now so the memo is ready when the camera gets there
-    const planBtn = page.locator('button:has-text("Write my plan")').first();
-    await planBtn.evaluate((b) => b.click());
+    await page.locator('button:has-text("Write my plan")').first().dispatchEvent('click');
     console.log(`plan requested @ ${now().toFixed(2)}s`);
     await sleep(page, d - 4200);
 

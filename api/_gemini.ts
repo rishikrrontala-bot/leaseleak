@@ -5,7 +5,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Free-tier quota is 20 requests/day *per model*, so the chain is also the budget:
 // a daily-quota 429 moves straight to the next model; a 503 retries first.
 const MODELS = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
-  'gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3-flash-preview',
+  'gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3-flash-preview',
 ]);
 const MAX_BODY = 200_000;          // bytes — a 200-unit brief is ~60 KB
 const WINDOW_MS = 10 * 60_000;     // rate limit window
@@ -73,7 +73,7 @@ function nextPacificMidnight(): number {
   return mid.getTime() + offset;
 }
 const isExhausted = (m: string) => (exhaustedUntil.get(m) ?? 0) > Date.now();
-const RETRY_DELAYS = [1200, 2500, 4000]; // on 429/503 — Gemini's "high demand" is usually seconds long
+const RETRY_DELAYS = [800, 1600]; // on 503 — one quick retry pair, then fail over to the next model
 
 /** One JSON-mode call. Retries transient errors, then tries the next model. */
 export async function gemini<T>(call: GeminiCall): Promise<GeminiResult<T>> {
