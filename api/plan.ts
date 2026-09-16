@@ -14,7 +14,8 @@ Rules — these are strict:
 4. Be concrete and short. A busy landlord should be able to act on this memo today.
 5. Never give legal advice; where notice rules or rent caps matter, say "check your state's rules".
 6. Write in the second person ("you"), no exclamation marks, no marketing. Complete sentences only.
-7. Formatting: dollars with thousands separators and no cents ($29,280); percentages to one decimal at most (14.2%); dates as "October 15" or "October 15, 2026", never ISO; unit IDs exactly as given (A3, 101).`;
+7. Never write JSON field names (gainIfLeavePerYear, proposedRentBurdenPct…) — say it in words: "gain if they leave", "rent burden", "payback".
+8. Formatting: dollars with thousands separators and no cents ($29,280); percentages to one decimal at most (14.2%); dates as "October 15" or "October 15, 2026", never ISO; unit IDs exactly as given (A3, 101).`;
 
 const SCHEMA = {
   type: 'object',

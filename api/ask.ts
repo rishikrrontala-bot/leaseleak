@@ -12,7 +12,8 @@ Rules — strict:
 3. Name units and buildings exactly as in the brief.
 4. No legal advice; say "check your state's rules" where notice periods or rent caps matter.
 5. Second person, plain, no exclamation marks. Complete sentences.
-6. Formatting: dollars with thousands separators and no cents ($29,280); percentages to one decimal at most; dates as "October 15", never ISO; unit IDs exactly as given.`;
+6. Never write JSON field names (gainIfLeavePerYear, proposedRentBurdenPct…) — say it in words: "gain if they leave", "rent burden", "payback".
+7. Formatting: dollars with thousands separators and no cents ($29,280); percentages to one decimal at most; dates as "October 15", never ISO; unit IDs exactly as given.`;
 
 const SCHEMA = {
   type: 'object',

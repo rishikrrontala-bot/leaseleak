@@ -1,16 +1,19 @@
 'use strict';
 /**
- * Records the LeaseLeak demo with Playwright: cursor overlay, burned-in captions,
- * and a cue log (demo/cues.json) so narration clips can be placed on the timeline.
+ * Records the LeaseLeak demo with Playwright against the LIVE site: cursor overlay,
+ * burned-in captions, and a cue log (demo/out/cues.json) so narration clips can be
+ * placed on the timeline by demo/mix.py.
  *
- *   node demo/record.cjs --rehearse   # verify selectors, no video
- *   node demo/record.cjs              # record demo/leaseleak-demo.webm
+ *   node demo/record.cjs --rehearse   # verify selectors + AI round-trips, no video
+ *   node demo/record.cjs              # record demo/out/leaseleak-demo.webm
+ *
+ * BASE_URL defaults to production so the video is also proof the deployment works.
  */
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5178';
+const BASE_URL = (process.env.BASE_URL || 'https://leaseleak.vercel.app').replace(/\/$/, '');
 const OUT_DIR = path.join(__dirname, 'out');
 const REHEARSAL = process.argv.includes('--rehearse');
 const NARRATION = JSON.parse(fs.readFileSync(path.join(__dirname, 'narration.json'), 'utf8'));
@@ -25,15 +28,15 @@ async function injectOverlays(page) {
     if (!document.getElementById('demo-cursor')) {
       const cursor = document.createElement('div');
       cursor.id = 'demo-cursor';
-      cursor.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3L19 12L12 13L9 20L5 3Z" fill="white" stroke="#10201a" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-      cursor.style.cssText = 'position:fixed;z-index:999999;pointer-events:none;width:26px;height:26px;left:-50px;top:-50px;transition:left 90ms,top 90ms;filter:drop-shadow(1px 1px 2px rgba(0,0,0,.45))';
+      cursor.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3L19 12L12 13L9 20L5 3Z" fill="white" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+      cursor.style.cssText = 'position:fixed;z-index:999999;pointer-events:none;width:26px;height:26px;left:-50px;top:-50px;transition:left 90ms,top 90ms;filter:drop-shadow(1px 1px 2px rgba(0,0,0,.35))';
       document.body.appendChild(cursor);
       document.addEventListener('mousemove', (e) => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
     }
     if (!document.getElementById('demo-subtitle')) {
       const bar = document.createElement('div');
       bar.id = 'demo-subtitle';
-      bar.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);max-width:82%;z-index:999998;text-align:center;padding:10px 18px;border-radius:10px;background:rgba(16,32,26,.86);color:#f4efe3;font-family:Satoshi,-apple-system,"Segoe UI",sans-serif;font-size:19px;font-weight:500;line-height:1.35;letter-spacing:.005em;transition:opacity 220ms;opacity:0;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+      bar.style.cssText = 'position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:80%;z-index:999998;text-align:center;padding:10px 18px;border-radius:12px;background:rgba(26,26,26,.9);color:#fbf8f6;font-family:Satoshi,-apple-system,"Segoe UI",sans-serif;font-size:19px;font-weight:500;line-height:1.35;letter-spacing:.005em;transition:opacity 220ms;opacity:0;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.25)';
       document.body.appendChild(bar);
     }
   });
@@ -46,16 +49,16 @@ async function caption(page, text) {
   }, text);
 }
 
-/** Start a narration cue: show its caption and log the time. Returns its duration. */
+/** Start a narration cue: show its caption and log the time. Returns its duration in ms. */
 async function narrate(page, id) {
   const line = NARRATION.find((l) => l.id === id);
   await caption(page, line.caption);
   cues.push({ id, at: now() });
   console.log(`cue ${id} @ ${now().toFixed(2)}s`);
-  return line.duration;
+  return line.duration * 1000;
 }
 
-const sleep = (page, ms) => page.waitForTimeout(ms);
+const sleep = (page, ms) => page.waitForTimeout(Math.max(0, ms));
 
 async function moveTo(page, locator, opts = {}) {
   const el = typeof locator === 'string' ? page.locator(locator).first() : locator;
@@ -69,14 +72,33 @@ async function moveAndClick(page, locator, label, opts = {}) {
   const el = await moveTo(page, locator, opts);
   await sleep(page, opts.pre ?? 350);
   await el.click();
-  console.log('click', label);
+  console.log('click', label, `@ ${now().toFixed(2)}s`);
   await sleep(page, opts.post ?? 600);
 }
-async function smoothScrollTo(page, locator, offset = -80, ms = 1100) {
+/** Scroll so the element sits `offset` px below the top (the fixed nav is ~90px). */
+async function smoothScrollTo(page, locator, offset = -110, ms = 1100) {
   const el = typeof locator === 'string' ? page.locator(locator).first() : locator;
   const y = await el.evaluate((n, off) => n.getBoundingClientRect().top + window.scrollY + off, offset);
   await page.evaluate((top) => window.scrollTo({ top, behavior: 'smooth' }), y);
   await sleep(page, ms);
+  // force any pending reveal animations so nothing is mid-wipe on camera
+  await page.evaluate(() => document.querySelectorAll('[data-reveal]').forEach((e) => e.classList.add('is-in')));
+}
+
+/** The answer renders with a verification line; an error renders as role=alert. Retry once on error. */
+async function waitForAnswer(page) {
+  const ok = page.locator('text=figures verified').first();
+  const err = page.locator('section[aria-labelledby="plan"] [role="alert"]').first();
+  await Promise.race([ok.waitFor({ timeout: 60000 }), err.waitFor({ timeout: 60000 })]);
+  if (await err.isVisible().catch(() => false)) {
+    console.log('ask error, retrying:', await err.textContent());
+    await page.locator('button:has-text("Which increases would you skip")').first().click();
+    await ok.waitFor({ timeout: 60000 });
+  }
+}
+async function askWithRetry(page) {
+  await page.click('button:has-text("Which increases would you skip")');
+  await waitForAnswer(page);
 }
 
 async function ensureVisible(page, selector, label) {
@@ -87,7 +109,7 @@ async function ensureVisible(page, selector, label) {
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch({ headless: true, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: W, height: H },
     deviceScaleFactor: 1,
@@ -97,98 +119,134 @@ async function ensureVisible(page, selector, label) {
   t0 = Date.now();
 
   try {
-    // ---------- 0:00 open on the tool, drop the sample immediately ----------
     await page.goto(`${BASE_URL}/app`, { waitUntil: 'networkidle' });
     await injectOverlays(page);
+
     if (REHEARSAL) {
       let ok = true;
       ok &= await ensureVisible(page, 'button:has-text("Try the sample roll")', 'sample button');
+      ok &= await ensureVisible(page, 'button:has-text("Try a messy export")', 'messy button');
       await page.click('button:has-text("Try the sample roll")');
       await page.waitForSelector('text=Rent left on the table');
-      ok &= await ensureVisible(page, 'text=Rent left on the table', 'headline');
-      ok &= await ensureVisible(page, 'h4:has-text("1704 S 5th St")', 'austin group');
-      ok &= await ensureVisible(page, 'button[role="tab"]:has-text("Lease timing")', 'timing tab');
-      ok &= await ensureVisible(page, 'h3:has-text("When your leases end")', 'expiries');
-      ok &= await ensureVisible(page, 'h3:has-text("Renewal letters, written")', 'letters');
-      ok &= await ensureVisible(page, 'button:has-text("letters (PDF)")', 'pdf button');
-      ok &= await ensureVisible(page, 'h3:has-text("How the number is computed")', 'method');
-      ok &= await ensureVisible(page, 'button:has-text("Upload another roll")', 'reset');
+      ok &= await ensureVisible(page, 'button:has-text("Write my plan")', 'plan button');
+      const tPlan = Date.now();
+      await page.click('button:has-text("Write my plan")');
+      await page.waitForSelector('button:has-text("Rewrite")', { timeout: 90000 });
+      console.log(`REHEARSAL OK: plan arrived in ${((Date.now() - tPlan) / 1000).toFixed(1)}s`);
+      ok &= await ensureVisible(page, 'text=figures in this memo trace to the engine', 'grounding line');
+      const tAsk = Date.now();
+      await askWithRetry(page);
+      console.log(`REHEARSAL OK: answer arrived in ${((Date.now() - tAsk) / 1000).toFixed(1)}s`);
+      for (const [sel, label] of [
+        ['h3:has-text("Building by building")', 'grades'], ['h3:has-text("Unit by unit")', 'unit bars'], ['h3:has-text("The next twelve months")', 'cash flow'],
+        ['h3:has-text("If they leave")', 'retention'], ['h3:has-text("When your leases end")', 'calendar'], ['h3:has-text("The voucher option")', 'vouchers'],
+        ['h3:has-text("Renewal letters, written")', 'letters'], ['button:has-text("letters (PDF)")', 'pdf button'], ['button:has-text("Upload another roll")', 'reset'],
+      ]) ok &= await ensureVisible(page, sel, label);
+      await page.click('button:has-text("Upload another roll")');
+      await page.click('button:has-text("Try a messy export")');
+      ok &= await ensureVisible(page, 'button:has-text("Let AI read the columns")', 'AI repair offer');
+      const tMap = Date.now();
+      await page.click('button:has-text("Let AI read the columns")');
+      await page.waitForSelector('text=read with AI', { timeout: 60000 });
+      console.log(`REHEARSAL OK: messy export read in ${((Date.now() - tMap) / 1000).toFixed(1)}s`);
+      ok &= await ensureVisible(page, 'text=Census geocoder', 'geocoder note');
       console.log(ok ? 'REHEARSAL PASSED' : 'REHEARSAL FAILED');
       await browser.close();
       process.exit(ok ? 0 : 1);
     }
 
-    await page.mouse.move(640, 80);
-    await sleep(page, 700);
+    // ---------- 01 · open on the tool, drop the sample ----------
+    await page.mouse.move(640, 90);
+    await sleep(page, 900);
     let d = await narrate(page, '01');
+    await sleep(page, 1600);
     await moveAndClick(page, 'button:has-text("Try the sample roll")', 'sample', { post: 300 });
     await page.waitForSelector('text=Rent left on the table');
-    await moveTo(page, 'text=Rent left on the table', { fx: 0.1, fy: 3.5, steps: 20 });
-    await sleep(page, Math.max(0, d * 1000 - 2200));
+    await moveTo(page, 'text=Rent left on the table', { fx: 0.12, fy: 3.4, steps: 22 });
+    // fire the AI request now so the memo is ready when the camera gets there
+    const planBtn = page.locator('button:has-text("Write my plan")').first();
+    await planBtn.evaluate((b) => b.click());
+    console.log(`plan requested @ ${now().toFixed(2)}s`);
+    await sleep(page, d - 4200);
 
-    // ---------- problem + benchmark ----------
+    // ---------- 02 · the benchmark ----------
     d = await narrate(page, '02');
     await moveTo(page, 'text=Recoverable this renewal cycle', { fy: 2, steps: 20 });
-    await sleep(page, 2200);
-    await moveTo(page, 'text=Lease-timing value', { fy: 2, steps: 16 });
-    await sleep(page, Math.max(0, d * 1000 - 2600));
-
-    // ---------- unit bars ----------
-    await smoothScrollTo(page, 'h4:has-text("1704 S 5th St")', -120);
-    d = await narrate(page, '03');
-    const a1 = page.locator('li', { hasText: 'A1' }).first();
-    await moveTo(page, a1, { fx: 0.62, steps: 18 });
-    await sleep(page, 2000);
-    await moveTo(page, a1, { fx: 0.9, steps: 12 });
-    await sleep(page, Math.max(0, d * 1000 - 2600));
-
-    // ---------- timing view ----------
-    d = await narrate(page, '04');
-    await moveAndClick(page, 'button[role="tab"]:has-text("Lease timing")', 'timing tab', { post: 900 });
-    await smoothScrollTo(page, 'h4:has-text("221 E 11th Ave")', -140, 900);
-    const u6 = page.locator('li', { hasText: 'P. Haddad' }).first();
-    await moveTo(page, page.locator('li', { hasText: '3 BR' }).nth(0), { fx: 0.55, steps: 16 }).catch(() => {});
-    await sleep(page, Math.max(0, d * 1000 - 3000));
-    void u6;
-
-    // ---------- calendar + 90 days ----------
-    await smoothScrollTo(page, 'h3:has-text("When your leases end")', -60);
-    d = await narrate(page, '05');
-    await moveTo(page, 'text=Next 90 days', { fy: 3, steps: 18 });
-    await sleep(page, 1500);
-    await moveTo(page, 'text=Next 90 days', { fy: 7, steps: 12 });
-    await sleep(page, Math.max(0, d * 1000 - 2500));
-
-    // ---------- letters ----------
-    await smoothScrollTo(page, 'h3:has-text("Renewal letters, written")', -40);
-    d = await narrate(page, '06');
-    await page.locator('input[placeholder="Your name or company"]').fill('');
-    await moveAndClick(page, 'input[placeholder="Your name or company"]', 'sign as', { post: 200 });
-    await page.keyboard.type('Rishik Rontala', { delay: 45 });
-    await sleep(page, 400);
-    await moveTo(page, 'article', { fx: 0.5, fy: 0.45, steps: 18 });
     await sleep(page, 2600);
-    await moveAndClick(page, 'button:has-text("letters (PDF)")', 'pdf', { post: 1200 });
-    await sleep(page, Math.max(0, d * 1000 - 6800));
+    await moveTo(page, 'text=Lease-timing value', { fy: 2, steps: 16 });
+    await sleep(page, 2600);
+    await moveTo(page, 'text=Rent left on the table', { fx: 0.5, fy: 5.5, steps: 16 });
+    await sleep(page, d - 6800);
 
-    // ---------- method ----------
-    await smoothScrollTo(page, 'h3:has-text("How the number is computed")', -80);
+    // ---------- 03 · the plan ----------
+    await page.waitForSelector('button:has-text("Rewrite")', { timeout: 90000 });
+    await smoothScrollTo(page, '#plan', -150, 1200);
+    d = await narrate(page, '03');
+    await moveTo(page, '#plan', { fx: 0.3, fy: 1.2, steps: 18 });
+    await sleep(page, 2400);
+    const cards = page.locator('#plan ~ ol li, section[aria-labelledby="plan"] ol > li');
+    for (let i = 0; i < Math.min(3, await cards.count()); i++) { await moveTo(page, cards.nth(i), { fx: 0.5, fy: 0.35, steps: 14 }); await sleep(page, 1700); }
+    await sleep(page, d - 2400 - 3 * 1900);
+
+    // ---------- 04 · the grounding check ----------
+    d = await narrate(page, '04');
+    const ground = page.locator('text=figures in this memo trace to the engine').first();
+    await smoothScrollTo(page, ground, -420, 1000);
+    await moveTo(page, ground, { fx: 0.18, steps: 20 });
+    await sleep(page, d - 1500);
+
+    // ---------- 05 · ask ----------
+    d = await narrate(page, '05');
+    const chip = page.locator('button:has-text("Which increases would you skip")').first();
+    await smoothScrollTo(page, chip, -520, 900);
+    await moveAndClick(page, chip, 'ask chip', { post: 300 });
+    await waitForAnswer(page);
+    const answer = page.locator('section[aria-labelledby="plan"] ol li p.t-body').last();
+    await smoothScrollTo(page, answer, -260, 900);
+    await moveTo(page, answer, { fx: 0.25, fy: 0.4, steps: 18 });
+    await sleep(page, d - 3800);
+
+    // ---------- 06 · the rest of the audit, quickly ----------
+    d = await narrate(page, '06');
+    const step = d / 5;
+    for (const sel of ['h3:has-text("Building by building")', 'h3:has-text("Unit by unit")', 'h3:has-text("The next twelve months")', 'h3:has-text("If they leave")', 'h3:has-text("The voucher option")']) {
+      await smoothScrollTo(page, sel, -110, 800);
+      await moveTo(page, sel, { fx: 0.2, fy: 2.6, steps: 10 });
+      await sleep(page, step - 900);
+    }
+
+    // ---------- 07 · letters ----------
+    await smoothScrollTo(page, 'h3:has-text("Renewal letters, written")', -110);
     d = await narrate(page, '07');
-    await moveTo(page, 'text=This is a conservative floor', { fx: 0.3, steps: 18 });
-    await sleep(page, Math.max(0, d * 1000 - 1300));
+    await page.locator('input[placeholder="Your name or company"]').fill('');
+    await moveAndClick(page, 'input[placeholder="Your name or company"]', 'sign as', { post: 150 });
+    await page.keyboard.type('Rishik Rontala', { delay: 40 });
+    await sleep(page, 300);
+    await moveTo(page, 'article', { fx: 0.5, fy: 0.45, steps: 18 });
+    await sleep(page, 2000);
+    await moveAndClick(page, 'button:has-text("letters (PDF)")', 'pdf', { post: 800 });
+    await sleep(page, d - 5200);
 
-    // ---------- close: back to the drop screen, then the landing ----------
+    // ---------- 08 · the messy export ----------
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    await sleep(page, 1000);
+    await sleep(page, 900);
     d = await narrate(page, '08');
-    await moveAndClick(page, 'button:has-text("Upload another roll")', 'reset', { post: 900 });
-    await moveTo(page, '.dropzone', { fx: 0.5, fy: 0.45, steps: 20 });
-    await sleep(page, 3200);
-    await page.goto(`${BASE_URL}/`);
+    await moveAndClick(page, 'button:has-text("Upload another roll")', 'reset', { post: 700 });
+    await moveAndClick(page, 'button:has-text("Try a messy export")', 'messy', { post: 700 });
+    await smoothScrollTo(page, 'button:has-text("Let AI read the columns")', -420, 800);
+    await moveAndClick(page, 'button:has-text("Let AI read the columns")', 'ai repair', { post: 200 });
+    await page.waitForSelector('text=read with AI', { timeout: 60000 });
+    await moveTo(page, 'text=Census geocoder', { fx: 0.3, steps: 18 });
+    await sleep(page, 2200);
+    await moveTo(page, 'text=Rent left on the table', { fx: 0.12, fy: 3.4, steps: 16 });
+    await sleep(page, d - 11500 > 1500 ? d - 11500 : 1500);
+
+    // ---------- 09 · close on the landing ----------
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
     await injectOverlays(page);
-    await caption(page, NARRATION.find((l) => l.id === '08').caption);
-    await page.mouse.move(980, 420, { steps: 20 });
-    await sleep(page, Math.max(1500, d * 1000 - 5500));
+    d = await narrate(page, '09');
+    await page.mouse.move(640, 560, { steps: 24 });
+    await sleep(page, d + 400);
     await caption(page, '');
     await sleep(page, 1200);
   } catch (err) {
